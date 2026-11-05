@@ -49,6 +49,7 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.expression.MultiExpression;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.geo.GeometryException;
+import com.onthegomap.planetiler.geo.GeometryType;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
@@ -68,6 +69,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
@@ -541,6 +543,10 @@ public class Transportation implements
         .setSortKey(element.zOrder())
         .setMinZoom(minzoom);
 
+      if (FieldValues.CLASS_PATH.equals(highwayClass)) {
+        feature.setPixelToleranceAtMaxZoom(0);
+      }
+
       if (isFootwayOrSteps(highway)) {
         feature
           .setAttr(Fields.LEVEL, Parse.parseLongOrNull(element.source().getTag("level")))
@@ -732,12 +738,24 @@ public class Transportation implements
       }
     }
 
-    var merged = FeatureMerge.mergeLineStrings(items, minLength, tolerance, BUFFER_SIZE);
+    List<VectorTile.Feature> merged;
+    if (zoom >= config.maxzoomForRendering()) {
+      var byPath = items.stream().collect(Collectors.partitioningBy(Transportation::isPathLine));
+      merged = new ArrayList<>(FeatureMerge.mergeLineStrings(byPath.get(false), minLength, tolerance, BUFFER_SIZE));
+      merged.addAll(FeatureMerge.mergeLineStrings(byPath.get(true), minLength, 0, BUFFER_SIZE));
+    } else {
+      merged = FeatureMerge.mergeLineStrings(items, minLength, tolerance, BUFFER_SIZE);
+    }
 
     for (var item : merged) {
       item.tags().remove(LIMIT_MERGE_TAG);
     }
     return merged;
+  }
+
+  private static boolean isPathLine(VectorTile.Feature item) {
+    return item.geometry().geomType() == GeometryType.LINE &&
+      FieldValues.CLASS_PATH.equals(item.tags().get(Fields.CLASS));
   }
 
   enum RouteNetwork {

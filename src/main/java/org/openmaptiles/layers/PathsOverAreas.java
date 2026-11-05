@@ -17,7 +17,7 @@ import org.openmaptiles.generated.OpenMapTilesSchema.Transportation.Fields;
 final class PathsOverAreas {
 
   static final int MIN_ZOOM = 13;
-  static final double EDGE_TOLERANCE = 0.125;
+  static final double EDGE_TOLERANCE = 1d / 64;
 
   private static final List<String> KIND_PRIORITY = List.of(
     FieldValues.OVER_PLATFORM,
