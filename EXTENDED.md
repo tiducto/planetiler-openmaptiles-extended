@@ -32,7 +32,7 @@ upstream schema changes not yet ported to Planetiler stay out:
 The `Tiles` workflow (`.github/workflows/tiles.yml`) runs every Monday and on demand:
 
 1. `scripts/tiles/cloudflare.sh` makes sure the R2 bucket `tiducto-tiles`, its custom domain `tiles.tiducto.eu`,
-   the cache rule for that host and Smart Tiered Cache exist, creating or fixing whatever is missing.
+   the cache and firewall rules for that host and Smart Tiered Cache exist, creating or fixing whatever is missing.
 2. `scripts/tiles/build.sh` merges the Geofabrik extracts of Czechia, Austria and Slovakia and builds z0–z14 tiles as
    plain `{z}/{x}/{y}.pbf` files.
 3. `scripts/tiles/publish.sh` uploads them to R2 under `v/<version>/` (cached for a year, never changed), then points
@@ -41,7 +41,14 @@ The `Tiles` workflow (`.github/workflows/tiles.yml`) runs every Monday and on de
 
 Clients use `https://tiles.tiducto.eu/openmaptiles.json` as the vector source URL, in place of OpenFreeMap's.
 
+The tiles are public, with no key: a key would ship inside every app, so it would keep nobody out. What costs money is
+a request that misses Cloudflare's cache and reads from R2 (bandwidth is free, and so are cache hits), so the host is
+set up to keep those few. The firewall rule blocks anything but `GET`, `HEAD` or `OPTIONS` of `/openmaptiles.json`,
+`/v/<version>/openmaptiles.json` and `/v/<version>/<z>/<x>/<y>.pbf` without a query string, at the edge and for free,
+and the cache rule keeps "not found" answers for a day. Run the workflow with `setup_only` to apply a change to them
+without building tiles.
+
 The only setting is the repository secret `CLOUDFLARE_API_TOKEN`, a Cloudflare account API token (Manage account →
 Account API tokens; a user API token works too) with Account → Workers R2 Storage → Edit, and Zone → Zone → Read,
-Cache Settings → Edit, Zone Settings → Edit and DNS → Edit on `tiducto.eu`. The same token is the R2 upload key: its id
+Cache Settings → Edit, Zone Settings → Edit, DNS → Edit and WAF → Edit on `tiducto.eu`. The same token is the R2 upload key: its id
 is the access key ID and the SHA-256 of its value the secret access key.

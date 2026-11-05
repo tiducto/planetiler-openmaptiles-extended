@@ -4,13 +4,17 @@
 # run on every build: it only creates or updates what is missing or different.
 #   - R2 bucket R2_BUCKET (EU location hint) with a read-only CORS policy, so web viewers can load tiles too
 #   - custom domain TILES_HOST on that bucket, so tiles go through Cloudflare's cache (r2.dev is rate limited)
-#   - cache rule for TILES_HOST: cache everything, honouring the Cache-Control headers set at upload
+#   - cache rule for TILES_HOST: cache everything, honouring the Cache-Control headers set at upload, and keep
+#     "not found" answers for a day, so a missing tile reaches R2 at most once a day
+#   - firewall rule for TILES_HOST: block everything but GET/HEAD/OPTIONS of the TileJSON and tiles without a query
+#     string, so requests made up to get past the cache never reach R2
 #   - with --tiered-cache, Smart Tiered Cache on the zone
 #
 # Usage: settings="$(scripts/tiles/cloudflare.sh [--tiered-cache])"
 #
 # Needs curl, jq and CLOUDFLARE_API_TOKEN, an account API token (or a user API token) with:
-#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Settings Edit, Zone Settings Edit, DNS Edit
+#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Settings Edit, Zone Settings Edit, DNS Edit,
+#   WAF Edit
 # The same token is the R2 upload key: its id is the access key ID and the SHA-256 of its value the secret.
 #
 # Prints R2_ACCOUNT_ID, R2_BUCKET, TILES_URL, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY as NAME=value lines on
@@ -23,7 +27,8 @@ set -euo pipefail
 ZONE_NAME="${ZONE_NAME:-tiducto.eu}"
 TILES_HOST="${TILES_HOST:-tiles.$ZONE_NAME}"
 R2_BUCKET="${R2_BUCKET:-tiducto-tiles}"
-RULE_REF="tiles_cache_everything"
+CACHE_RULE_REF="tiles_cache_everything"
+FIREWALL_RULE_REF="tiles_allow_only_tiles"
 API="https://api.cloudflare.com/client/v4"
 : "${CLOUDFLARE_API_TOKEN:?set CLOUDFLARE_API_TOKEN}"
 
@@ -48,6 +53,26 @@ cf() {
 }
 
 errors() { jq -r '[.errors[]? | "\(.code): \(.message)"] | join("; ")'; }
+
+upsert_rule() {
+  local phase="$1" ref="$2" rule="$3" what="$4" permission="$5" entrypoint ruleset_id rule_id out
+  entrypoint="$(cf GET "/zones/$ZONE_ID/rulesets/phases/$phase/entrypoint" || true)"
+  ruleset_id="$(jq -r '.result.id // empty' <<<"$entrypoint")"
+  rule_id="$(jq -r --arg ref "$ref" '.result.rules[]? | select(.ref == $ref) | .id' <<<"$entrypoint")"
+  if [ -z "$ruleset_id" ]; then
+    out="$(cf PUT "/zones/$ZONE_ID/rulesets/phases/$phase/entrypoint" \
+      "$(jq -n --argjson rule "$rule" '{rules: [$rule]}')")" || fail "can't create the $what (needs $permission): $(errors <<<"$out")"
+    log "$what: created"
+  elif [ -n "$rule_id" ]; then
+    out="$(cf PATCH "/zones/$ZONE_ID/rulesets/$ruleset_id/rules/$rule_id" "$rule")" ||
+      fail "can't update the $what (needs $permission): $(errors <<<"$out")"
+    log "$what: up to date"
+  else
+    out="$(cf POST "/zones/$ZONE_ID/rulesets/$ruleset_id/rules" "$rule")" ||
+      fail "can't add the $what (needs $permission): $(errors <<<"$out")"
+    log "$what: added"
+  fi
+}
 
 ZONE="$(cf GET "/zones?name=$ZONE_NAME")" || fail "can't read zone $ZONE_NAME (needs Zone Read): $(errors <<<"$ZONE")"
 ZONE_ID="$(jq -r '.result[0].id // empty' <<<"$ZONE")"
@@ -84,30 +109,32 @@ else
   log "custom domain $TILES_HOST: attached"
 fi
 
-RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$RULE_REF" '{
+CACHE_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$CACHE_RULE_REF" '{
   ref: $ref,
-  description: "Cache map tiles and TileJSON, honouring their Cache-Control headers",
+  description: "Cache map tiles and TileJSON, honouring their Cache-Control headers; keep misses for a day",
   expression: "(http.host eq \"\($host)\")",
   action: "set_cache_settings",
-  action_parameters: {cache: true, edge_ttl: {mode: "respect_origin"}, browser_ttl: {mode: "respect_origin"}},
+  action_parameters: {
+    cache: true,
+    edge_ttl: {mode: "respect_origin", status_code_ttl: [{status_code: 404, value: 86400}]},
+    browser_ttl: {mode: "respect_origin"}
+  },
   enabled: true
 }')"
-ENTRYPOINT="$(cf GET "/zones/$ZONE_ID/rulesets/phases/http_request_cache_settings/entrypoint" || true)"
-RULESET_ID="$(jq -r '.result.id // empty' <<<"$ENTRYPOINT")"
-RULE_ID="$(jq -r --arg ref "$RULE_REF" '.result.rules[]? | select(.ref == $ref) | .id' <<<"$ENTRYPOINT")"
-if [ -z "$RULESET_ID" ]; then
-  out="$(cf PUT "/zones/$ZONE_ID/rulesets/phases/http_request_cache_settings/entrypoint" \
-    "$(jq -n --argjson rule "$RULE" '{rules: [$rule]}')")" || fail "can't create the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
-  log "cache rule: created"
-elif [ -n "$RULE_ID" ]; then
-  out="$(cf PATCH "/zones/$ZONE_ID/rulesets/$RULESET_ID/rules/$RULE_ID" "$RULE")" ||
-    fail "can't update the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
-  log "cache rule: up to date"
-else
-  out="$(cf POST "/zones/$ZONE_ID/rulesets/$RULESET_ID/rules" "$RULE")" ||
-    fail "can't add the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
-  log "cache rule: added"
-fi
+upsert_rule http_request_cache_settings "$CACHE_RULE_REF" "$CACHE_RULE" "cache rule" "Cache Settings Edit"
+
+FIREWALL_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$FIREWALL_RULE_REF" '{
+  ref: $ref,
+  description: "Only the TileJSON and tiles, so made-up requests never reach R2",
+  expression: ("(http.host eq \"\($host)\" and (not http.request.method in {\"GET\" \"HEAD\" \"OPTIONS\"}"
+    + " or http.request.uri.query ne \"\""
+    + " or not (http.request.uri.path eq \"/openmaptiles.json\""
+    + " or http.request.uri.path wildcard \"/v/*/openmaptiles.json\""
+    + " or http.request.uri.path wildcard \"/v/*/*/*/*.pbf\")))"),
+  action: "block",
+  enabled: true
+}')"
+upsert_rule http_request_firewall_custom "$FIREWALL_RULE_REF" "$FIREWALL_RULE" "firewall rule" "WAF Edit"
 
 if [ "$TIERED" = 1 ]; then
   out="$(cf PATCH "/zones/$ZONE_ID/cache/tiered_cache_smart_topology_enable" '{"value":"on"}')" ||
