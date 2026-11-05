@@ -51,10 +51,7 @@ final class PathsOverAreas {
       String kind = areaKind(item);
       Geometry geometry = kind == null ? null : decode(item);
       if (geometry != null) {
-        Geometry shrunk = geometry.buffer(-EDGE_TOLERANCE);
-        if (!shrunk.isEmpty()) {
-          areas.add(new Area(shrunk, kind, layer(item)));
-        }
+        areas.add(new Area(geometry.buffer(EDGE_TOLERANCE), kind, layer(item)));
       }
     }
     areas.sort(Comparator.comparingInt(area -> priority(area.kind)));

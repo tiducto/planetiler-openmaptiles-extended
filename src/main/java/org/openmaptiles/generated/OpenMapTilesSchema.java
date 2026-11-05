@@ -1072,9 +1072,10 @@ public class OpenMapTilesSchema {
       /**
        * Filled only on <code>path</code> lines from z13: the kind of area polygon of this layer that the line runs
        * across on the same <code>layer</code>, so styles can draw a path over a square or a platform differently from
-       * one on open ground. Lines are split where they enter and leave an area. Bridges, tunnels, indoor paths and
-       * lines running along an area's edge are left out. Where areas overlap, <code>platform</code> wins over
-       * <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which wins over any other kind.
+       * one on open ground. Lines are split where they enter and leave an area, and a line running along an area's edge
+       * counts as running across it. Bridges, tunnels and indoor paths are left out. Where areas overlap,
+       * <code>platform</code> wins over <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which
+       * wins over any other kind.
        * <p>
        * allowed values:
        * <ul>
