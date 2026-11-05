@@ -43,9 +43,9 @@ Clients use `https://tiles.tiducto.eu/openmaptiles.json` as the vector source UR
 
 The tiles are public, with no key: a key would ship inside every app, so it would keep nobody out. What costs money is
 a request that misses Cloudflare's cache and reads from R2 (bandwidth is free, and so are cache hits), so the host is
-set up to keep those few. The firewall rule blocks anything but `GET`, `HEAD` or `OPTIONS` of `/openmaptiles.json`,
-`/v/<version>/openmaptiles.json` and `/v/<version>/<z>/<x>/<y>.pbf` without a query string, at the edge and for free,
-and the cache rule keeps "not found" answers for a day. Run the workflow with `setup_only` to apply a change to them
+set up to keep those few. The firewall rule blocks anything but a `GET` of `/openmaptiles.json`, `/v/<version>/openmaptiles.json` or
+`/v/<version>/<z>/<x>/<y>.pbf` without a query string, at the edge and for free (`HEAD` and `OPTIONS` skip the cache,
+and MapLibre sends neither), and the cache rule keeps "not found" answers for a day. Run the workflow with `setup_only` to apply a change to them
 without building tiles.
 
 The only setting is the repository secret `CLOUDFLARE_API_TOKEN`, a Cloudflare account API token (Manage account →

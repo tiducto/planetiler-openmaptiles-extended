@@ -6,8 +6,8 @@
 #   - custom domain TILES_HOST on that bucket, so tiles go through Cloudflare's cache (r2.dev is rate limited)
 #   - cache rule for TILES_HOST: cache everything, honouring the Cache-Control headers set at upload, and keep
 #     "not found" answers for a day, so a missing tile reaches R2 at most once a day
-#   - firewall rule for TILES_HOST: block everything but GET/HEAD/OPTIONS of the TileJSON and tiles without a query
-#     string, so requests made up to get past the cache never reach R2
+#   - firewall rule for TILES_HOST: block everything but a GET of the TileJSON or a tile without a query string, so
+#     requests made up to get past the cache never reach R2 (HEAD and OPTIONS skip the cache, MapLibre sends neither)
 #   - with --tiered-cache, Smart Tiered Cache on the zone
 #
 # Usage: settings="$(scripts/tiles/cloudflare.sh [--tiered-cache])"
@@ -126,7 +126,7 @@ upsert_rule http_request_cache_settings "$CACHE_RULE_REF" "$CACHE_RULE" "cache r
 FIREWALL_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$FIREWALL_RULE_REF" '{
   ref: $ref,
   description: "Only the TileJSON and tiles, so made-up requests never reach R2",
-  expression: ("(http.host eq \"\($host)\" and (not http.request.method in {\"GET\" \"HEAD\" \"OPTIONS\"}"
+  expression: ("(http.host eq \"\($host)\" and (http.request.method ne \"GET\""
     + " or http.request.uri.query ne \"\""
     + " or not (http.request.uri.path eq \"/openmaptiles.json\""
     + " or http.request.uri.path wildcard \"/v/*/openmaptiles.json\""
