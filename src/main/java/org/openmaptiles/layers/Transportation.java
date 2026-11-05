@@ -722,6 +722,9 @@ public class Transportation implements
 
   @Override
   public List<VectorTile.Feature> postProcess(int zoom, List<VectorTile.Feature> items) {
+    if (zoom >= PathsOverAreas.MIN_ZOOM) {
+      items = PathsOverAreas.split(items);
+    }
     double tolerance = config.tolerance(zoom);
     double minLength = coalesce(MIN_LENGTH.apply(zoom), 0).doubleValue();
 
