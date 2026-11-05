@@ -8,6 +8,7 @@
 #   AREAS     Geofabrik extracts to merge (default: Czechia, Austria, Slovakia)
 #   BOUNDS    tile bounds as min lon,min lat,max lon,max lat (default: the box around those three)
 #   JAVA_XMX  Planetiler heap (default: 8g)
+#   MAXZOOM   highest zoom level built (default: 15; z14 tiles snap corners to a ~0.4 m grid, which skews small buildings)
 #   SKIP_OSM_DOWNLOAD=1 reuses WORK_DIR/osm/*.osm.pbf instead of downloading them again
 #
 # Water polygons come from osmdata.openstreetmap.de, or from the FAU mirror's newest copy when that is down.
@@ -20,6 +21,7 @@ WORK_DIR="${1:?usage: $0 WORK_DIR}"
 AREAS="${AREAS:-europe/czech-republic europe/austria europe/slovakia}"
 BOUNDS="${BOUNDS:-9.4,46.3,22.6,51.1}"
 JAVA_XMX="${JAVA_XMX:-8g}"
+MAXZOOM="${MAXZOOM:-15}"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 JAR="$(ls "$ROOT"/target/planetiler-openmaptiles-*-with-deps.jar 2>/dev/null | head -1 || true)"
@@ -71,6 +73,8 @@ rm -rf "$WORK_DIR/tiles"
 java "-Xmx$JAVA_XMX" -jar "$JAR" \
   --osm_path="$WORK_DIR/region.osm.pbf" \
   --bounds="$BOUNDS" \
+  --maxzoom="$MAXZOOM" \
+  --render_maxzoom="$MAXZOOM" \
   --download \
   --download_dir="$WORK_DIR/sources" \
   --tmpdir="$WORK_DIR/tmp" \

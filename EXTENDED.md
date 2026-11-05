@@ -15,6 +15,7 @@ on a branch of the same name, also based on upstream.
 | `elevator`           | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
 | `footpath-over-area` | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
 | `building-roof`      | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
+| `water-name-maxzoom` | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
 matching `openmaptiles-extended` branch, add the Java change and tests, then merge it into `main`. When two branches
@@ -33,8 +34,10 @@ The `Tiles` workflow (`.github/workflows/tiles.yml`) runs every Monday and on de
 
 1. `scripts/tiles/cloudflare.sh` makes sure the R2 bucket `tiducto-tiles`, its custom domain `tiles.tiducto.eu`,
    the cache and firewall rules for that host and Smart Tiered Cache exist, creating or fixing whatever is missing.
-2. `scripts/tiles/build.sh` merges the Geofabrik extracts of Czechia, Austria and Slovakia and builds z0–z14 tiles as
-   plain `{z}/{x}/{y}.pbf` files.
+2. `scripts/tiles/build.sh` merges the Geofabrik extracts of Czechia, Austria and Slovakia and builds z0–z15 tiles as
+   plain `{z}/{x}/{y}.pbf` files. OpenMapTiles stops at z14, but a z14 tile stores coordinates on a grid of about 0.4 m
+   (4096 steps per tile), which skews small buildings such as lift towers when the map is zoomed in; z15 halves that.
+   Set `MAXZOOM` to change it.
 3. `scripts/tiles/publish.sh` uploads them to R2 under `v/<version>/` (cached for a year, never changed), then points
    `openmaptiles.json` (the TileJSON clients load, cached for five minutes) at the new version and deletes all but the
    two newest versions.
