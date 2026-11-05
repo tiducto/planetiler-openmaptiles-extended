@@ -29,6 +29,8 @@ PROJECT="${GCP_PROJECT_ID:-tiducto-spider}"
 RULE_REF="tiles_cache_everything"
 API="https://api.cloudflare.com/client/v4"
 
+[ -t 0 ] || { echo "ERROR: run this in a terminal: it asks for confirmation and reads the R2 key from a hidden prompt." >&2; exit 1; }
+
 for tool in curl jq gh; do
   command -v "$tool" >/dev/null || { echo "ERROR: $tool not found on PATH." >&2; exit 1; }
 done
