@@ -283,6 +283,22 @@ class PoiTest extends AbstractLayerTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  void testElevator(boolean area) {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "poi",
+      "class", "elevator",
+      "subclass", "elevator",
+      "level", -1L,
+      "_minzoom", 14,
+      "_type", "point"
+    )), process(feature(area, Map.of(
+      "highway", "elevator",
+      "level", "-1"
+    ))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   void testFerryTerminal(boolean area) {
     assertFeatures(7, List.of(Map.of(
       "_layer", "poi",
