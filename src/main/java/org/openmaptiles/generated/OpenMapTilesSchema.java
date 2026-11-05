@@ -1290,6 +1290,19 @@ public class OpenMapTilesSchema {
        * <a href="https://wiki.openstreetmap.org/wiki/Simple_3D_buildings">building outlines</a> are marked as hide_3d.
        */
       public static final String HIDE_3D = "hide_3d";
+
+      /**
+       * Whether this is a roof with open sides, based on the
+       * <a href="http://wiki.openstreetmap.org/wiki/Tag:building%3Droof"><code>building=roof</code></a> tag: a platform
+       * canopy, a shelter or a fuel station roof, which styles may draw apart from enclosed buildings, for example
+       * above the platforms and paths it covers.
+       * <p>
+       * allowed values:
+       * <ul>
+       * <li>1
+       * </ul>
+       */
+      public static final String ROOF = "roof";
     }
     /** Attribute values for map elements in the building layer. */
     final class FieldValues {
