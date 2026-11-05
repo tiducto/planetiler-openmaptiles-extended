@@ -859,8 +859,7 @@ public class OpenMapTilesSchema {
    * derived from the OSM road hierarchy. At lower zoom levels major highways from Natural Earth are used. It contains
    * all roads from motorways to primary, secondary and tertiary roads to residential roads and foot paths. Styling the
    * roads is the most essential part of the map. The <code>transportation</code> layer also contains polygons for
-   * features like plazas. A closed <code>public_transport=platform</code> way is a polygon unless it has
-   * <code>area=no</code>, and is then not repeated as a line.
+   * features like plazas.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>

@@ -316,11 +316,6 @@ public class Transportation implements
     return "bridge".equals(manMade) || "pier".equals(manMade);
   }
 
-  private static boolean isPlatformArea(SourceFeature source, String publicTransport, long layer) {
-    return "platform".equals(publicTransport) && layer >= 0 && source.canBePolygon() &&
-      !"no".equals(source.getString("area"));
-  }
-
   @Override
   public void processNaturalEarth(String table, SourceFeature feature,
     FeatureCollector features) {
@@ -488,7 +483,7 @@ public class Transportation implements
 
   @Override
   public void process(Tables.OsmHighwayLinestring element, FeatureCollector features) {
-    if (element.isArea() || isPlatformArea(element.source(), element.publicTransport(), element.layer())) {
+    if (element.isArea()) {
       return;
     }
 
@@ -705,8 +700,7 @@ public class Transportation implements
     if (isBridgeOrPier(manMade) ||
       // only allow closed ways where area=yes, and multipolygons
       // and ignore underground pedestrian areas
-      (!element.source().canBeLine() && element.layer() >= 0) ||
-      isPlatformArea(element.source(), element.publicTransport(), element.layer())) {
+      (!element.source().canBeLine() && element.layer() >= 0)) {
       String highwayClass = highwayClass(element.highway(), element.publicTransport(), null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
