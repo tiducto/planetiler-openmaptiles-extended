@@ -4,26 +4,32 @@ import static com.onthegomap.planetiler.TestUtils.newLineString;
 import static com.onthegomap.planetiler.TestUtils.newPoint;
 import static com.onthegomap.planetiler.TestUtils.rectangle;
 import static java.util.Map.entry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.onthegomap.planetiler.FeatureCollector;
+import com.onthegomap.planetiler.VectorTile;
 import com.onthegomap.planetiler.config.Arguments;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeometryException;
+import com.onthegomap.planetiler.geo.GeometryType;
 import com.onthegomap.planetiler.reader.SimpleFeature;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import com.onthegomap.planetiler.stats.Stats;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.locationtech.jts.geom.Geometry;
 import org.openmaptiles.OpenMapTilesProfile;
 
 class TransportationTest extends AbstractLayerTest {
@@ -2009,6 +2015,67 @@ class TransportationTest extends AbstractLayerTest {
     )), process(lineFeature(Map.of(
       "man_made", "pier"
     ))));
+  }
+
+  private static VectorTile.Feature transportationFeature(Geometry geometry, Map<String, Object> attrs) {
+    return new VectorTile.Feature(Transportation.LAYER_NAME, 1, VectorTile.encodeGeometry(geometry),
+      new HashMap<>(attrs), 0);
+  }
+
+  private Map<String, Double> pathLengthsByOver(int zoom, VectorTile.Feature... features) throws GeometryException {
+    Map<String, Double> lengths = new HashMap<>();
+    for (var feature : profile.postProcessLayerFeatures(Transportation.LAYER_NAME, zoom, List.of(features))) {
+      if (feature.geometry().geomType() == GeometryType.LINE) {
+        double length = Math.round(feature.geometry().decode().getLength() * 1000) / 1000d;
+        lengths.merge(Objects.toString(feature.tags().get("over"), "none"), length, Double::sum);
+      }
+    }
+    return lengths;
+  }
+
+  private static final Map<String, Object> FOOTWAY = Map.of("class", "path", "subclass", "footway");
+
+  @Test
+  void testPathOverPedestrianArea() throws GeometryException {
+    var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
+    var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
+    assertEquals(Map.of("pedestrian", 9.75, "none", 20.25), pathLengthsByOver(14, square, path));
+    assertEquals(Map.of("pedestrian", 9.75, "none", 20.25), pathLengthsByOver(13, square, path));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(12, square, path));
+  }
+
+  @Test
+  void testPathOverPlatformInsidePedestrianArea() throws GeometryException {
+    var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
+    var platform = transportationFeature(rectangle(12, 18), Map.of("class", "path", "subclass", "platform"));
+    var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
+    assertEquals(Map.of("platform", 5.75, "pedestrian", 4d, "none", 20.25),
+      pathLengthsByOver(14, path, square, platform));
+  }
+
+  @Test
+  void testPathOverPier() throws GeometryException {
+    var pier = transportationFeature(rectangle(10, 20), Map.of("class", "pier"));
+    var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
+    assertEquals(Map.of("pier", 9.75, "none", 20.25), pathLengthsByOver(14, pier, path));
+  }
+
+  @Test
+  void testPathNotOverArea() throws GeometryException {
+    var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
+    var bridgeDeck = transportationFeature(rectangle(10, 20), Map.of("class", "bridge"));
+    assertEquals(Map.of("none", 10d),
+      pathLengthsByOver(14, square, transportationFeature(newLineString(10, 10, 20, 10), FOOTWAY)));
+    assertEquals(Map.of("none", 30d),
+      pathLengthsByOver(14, bridgeDeck, transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY)));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(14, square, transportationFeature(
+      newLineString(0, 15, 30, 15), Map.of("class", "path", "subclass", "footway", "brunnel", "bridge"))));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(14, square, transportationFeature(
+      newLineString(0, 15, 30, 15), Map.of("class", "path", "subclass", "footway", "layer", 1L))));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(14, square, transportationFeature(
+      newLineString(0, 15, 30, 15), Map.of("class", "path", "subclass", "footway", "indoor", 1))));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(14, square, transportationFeature(
+      newLineString(0, 15, 30, 15), Map.of("class", "minor"))));
   }
 
   @Test

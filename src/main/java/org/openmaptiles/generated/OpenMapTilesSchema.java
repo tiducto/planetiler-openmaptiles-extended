@@ -1055,6 +1055,28 @@ public class OpenMapTilesSchema {
        * </ul>
        */
       public static final String INDOOR = "indoor";
+
+      /**
+       * Filled only on <code>path</code> lines from z13: the kind of area polygon of this layer that the line runs
+       * across on the same <code>layer</code>, so styles can draw a path over a square or a platform differently from
+       * one on open ground. Lines are split where they enter and leave an area. Bridges, tunnels, indoor paths and
+       * lines running along an area's edge are left out. Where areas overlap, <code>platform</code> wins over
+       * <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which wins over any other kind.
+       * <p>
+       * allowed values:
+       * <ul>
+       * <li>"platform"
+       * <li>"pier"
+       * <li>"pedestrian"
+       * <li>"footway"
+       * <li>"path"
+       * <li>"cycleway"
+       * <li>"bridleway"
+       * <li>"corridor"
+       * <li>"steps"
+       * </ul>
+       */
+      public static final String OVER = "over";
       /**
        * Original value of the <a href="http://wiki.openstreetmap.org/wiki/Key:bicycle"><code>bicycle</code></a> tag
        * (highways only).
@@ -1165,6 +1187,17 @@ public class OpenMapTilesSchema {
       public static final String SERVICE_PARKING_AISLE = "parking_aisle";
       public static final Set<String> SERVICE_VALUES =
         Set.of("spur", "yard", "siding", "crossover", "driveway", "alley", "parking_aisle");
+      public static final String OVER_PLATFORM = "platform";
+      public static final String OVER_PIER = "pier";
+      public static final String OVER_PEDESTRIAN = "pedestrian";
+      public static final String OVER_FOOTWAY = "footway";
+      public static final String OVER_PATH = "path";
+      public static final String OVER_CYCLEWAY = "cycleway";
+      public static final String OVER_BRIDLEWAY = "bridleway";
+      public static final String OVER_CORRIDOR = "corridor";
+      public static final String OVER_STEPS = "steps";
+      public static final Set<String> OVER_VALUES =
+        Set.of("platform", "pier", "pedestrian", "footway", "path", "cycleway", "bridleway", "corridor", "steps");
       public static final String SURFACE_PAVED = "paved";
       public static final String SURFACE_UNPAVED = "unpaved";
       public static final Set<String> SURFACE_VALUES = Set.of("paved", "unpaved");
