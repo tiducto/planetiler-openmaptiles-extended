@@ -174,7 +174,8 @@ public class Building implements
       parseDoubleOrNull(element.buildingminLevel())
     );
 
-    int renderHeight = (int) Math.ceil(height != null ? height : levels != null ? (levels * 3.66) : 5);
+    boolean roof = "roof".equals(element.building());
+    int renderHeight = (int) Math.ceil(height != null ? height : levels != null ? (levels * 3.66) : roof ? 3.66 : 5);
     int renderMinHeight = (int) Math.floor(minHeight != null ? minHeight : minLevels != null ? (minLevels * 3.66) : 0);
 
     if (renderHeight < 3660 && renderMinHeight < 3660) {
@@ -185,7 +186,7 @@ public class Building implements
         .setAttrWithMinzoom(Fields.RENDER_MIN_HEIGHT, renderMinHeight, 14)
         .setAttrWithMinzoom(Fields.COLOUR, color, 14)
         .setAttrWithMinzoom(Fields.HIDE_3D, hide3d, 14)
-        .setAttrWithMinzoom(Fields.ROOF, "roof".equals(element.building()) ? 1 : null, 14)
+        .setAttrWithMinzoom(Fields.ROOF, roof ? 1 : null, 14)
         .setAttrWithMinzoom(TEMP_PART, hideOutlinesWithParts && element.buildingpart() != null ? true : null, 14)
         .setSortKey(renderHeight);
       if (mergeZ13Buildings) {

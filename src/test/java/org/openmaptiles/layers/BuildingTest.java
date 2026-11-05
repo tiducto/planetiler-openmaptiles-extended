@@ -79,6 +79,37 @@ class BuildingTest extends AbstractLayerTest {
   }
 
   @Test
+  void testRoofHeight() {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "building",
+      "render_height", 4,
+      "render_min_height", 0
+    )), process(polygonFeature(Map.of(
+      "building", "roof"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "building",
+      "render_height", 5
+    )), process(polygonFeature(Map.of(
+      "building", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "building",
+      "render_height", 7
+    )), process(polygonFeature(Map.of(
+      "building", "roof",
+      "height", "6.5"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "building",
+      "render_height", 8
+    )), process(polygonFeature(Map.of(
+      "building", "roof",
+      "building:levels", "2"
+    ))));
+  }
+
+  @Test
   void testIgnoreUndergroundBuilding() {
     assertFeatures(14, List.of(), process(polygonFeature(Map.of(
       "building", "yes",
