@@ -9,7 +9,7 @@
 #
 # Usage: settings="$(scripts/tiles/cloudflare.sh [--tiered-cache])"
 #
-# Needs curl, jq and CLOUDFLARE_API_TOKEN, a token with:
+# Needs curl, jq and CLOUDFLARE_API_TOKEN, an account API token (or a user API token) with:
 #   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Rules Edit, Zone Settings Edit, DNS Edit
 # The same token is the R2 upload key: its id is the access key ID and the SHA-256 of its value the secret.
 #
@@ -49,13 +49,15 @@ cf() {
 
 errors() { jq -r '[.errors[]? | "\(.code): \(.message)"] | join("; ")'; }
 
-TOKEN="$(cf GET /user/tokens/verify)" || fail "the token doesn't verify: $(errors <<<"$TOKEN")"
-TOKEN_ID="$(jq -r '.result.id' <<<"$TOKEN")"
-
 ZONE="$(cf GET "/zones?name=$ZONE_NAME")" || fail "can't read zone $ZONE_NAME (needs Zone Read): $(errors <<<"$ZONE")"
 ZONE_ID="$(jq -r '.result[0].id // empty' <<<"$ZONE")"
 ACCOUNT_ID="$(jq -r '.result[0].account.id // empty' <<<"$ZONE")"
 [ -n "$ZONE_ID" ] || fail "zone $ZONE_NAME not found for this token (needs Zone Read on it)"
+
+if ! TOKEN="$(cf GET /user/tokens/verify)"; then
+  TOKEN="$(cf GET "/accounts/$ACCOUNT_ID/tokens/verify")" || fail "the token doesn't verify: $(errors <<<"$TOKEN")"
+fi
+TOKEN_ID="$(jq -r '.result.id' <<<"$TOKEN")"
 
 BUCKETS="$(cf GET "/accounts/$ACCOUNT_ID/r2/buckets?name_contains=$R2_BUCKET&per_page=1000")" ||
   fail "can't list R2 buckets (needs Workers R2 Storage Edit): $(errors <<<"$BUCKETS")"
