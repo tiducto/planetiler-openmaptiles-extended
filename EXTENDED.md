@@ -31,13 +31,16 @@ upstream schema changes not yet ported to Planetiler stay out:
 
 The `Tiles` workflow (`.github/workflows/tiles.yml`) runs every Monday and on demand:
 
-1. `scripts/tiles/build.sh` merges the Geofabrik extracts of Czechia, Austria and Slovakia and builds z0–z14 tiles as
+1. `scripts/tiles/cloudflare.sh` makes sure the R2 bucket `tiducto-tiles`, its custom domain `tiles.tiducto.eu`,
+   the cache rule for that host and Smart Tiered Cache exist, creating or fixing whatever is missing.
+2. `scripts/tiles/build.sh` merges the Geofabrik extracts of Czechia, Austria and Slovakia and builds z0–z14 tiles as
    plain `{z}/{x}/{y}.pbf` files.
-2. `scripts/tiles/publish.sh` uploads them to Cloudflare R2 under `v/<version>/` (cached for a year, never changed),
-   then points `openmaptiles.json` (the TileJSON clients load, cached for five minutes) at the new version and
-   deletes all but the two newest versions.
+3. `scripts/tiles/publish.sh` uploads them to R2 under `v/<version>/` (cached for a year, never changed), then points
+   `openmaptiles.json` (the TileJSON clients load, cached for five minutes) at the new version and deletes all but the
+   two newest versions.
 
 Clients use `https://tiles.tiducto.eu/openmaptiles.json` as the vector source URL, in place of OpenFreeMap's.
 
-One-time setup: `scripts/tiles/setup-cloudflare.sh` creates the bucket, its custom domain and cache rule, and sets the
-workflow's variables and R2 key secrets.
+The only setting is the repository secret `CLOUDFLARE_API_TOKEN`, a Cloudflare API token with Account → Workers R2
+Storage → Edit, and Zone → Zone → Read, Cache Rules → Edit, Zone Settings → Edit and DNS → Edit on `tiducto.eu`. The
+same token is the R2 upload key: its id is the access key ID and the SHA-256 of its value the secret access key.
