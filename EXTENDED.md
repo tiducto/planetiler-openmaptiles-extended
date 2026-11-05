@@ -13,7 +13,6 @@ on a branch of the same name, also based on upstream.
 |----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | `motorroad`          | `motorroad=1` on non-motorway roads tagged `motorroad=yes` ([openmaptiles#1818](https://github.com/openmaptiles/openmaptiles/pull/1818))   |
 | `elevator`           | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
-| `platform-areas`     | closed `public_transport=platform` ways become polygons unless `area=no`                                                                   |
 | `footpath-over-area` | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
