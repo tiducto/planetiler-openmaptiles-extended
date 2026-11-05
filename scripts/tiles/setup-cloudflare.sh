@@ -13,6 +13,11 @@
 # The R2 access key for the workflow is created by hand (the script tells you where) and read from a hidden
 # prompt; it is never written to disk.
 #
+# Usage: setup-cloudflare.sh [--yes] [--tiered-cache]
+#   --yes           apply without asking, so it also runs without a terminal (e.g. Claude Code's ! commands);
+#                   the R2 key is then not prompted for, and the script says where to add it on GitHub instead
+#   --tiered-cache  with --yes, also turn on Smart Tiered Cache for the zone
+#
 # Needs curl, jq and gh (logged in with admin rights on REPO), and a Cloudflare API token with:
 #   Account: Workers R2 Storage Edit; Zone: Zone Read, Cache Rules Edit, Zone Settings Edit, DNS Edit
 # taken from CLOUDFLARE_API_TOKEN or, when unset, from the `cloudflare-api-token` Secret Manager secret via gcloud.
@@ -29,7 +34,21 @@ PROJECT="${GCP_PROJECT_ID:-tiducto-spider}"
 RULE_REF="tiles_cache_everything"
 API="https://api.cloudflare.com/client/v4"
 
-[ -t 0 ] || { echo "ERROR: run this in a terminal: it asks for confirmation and reads the R2 key from a hidden prompt." >&2; exit 1; }
+YES=0
+TIERED=0
+for arg in "$@"; do
+  case "$arg" in
+    --yes) YES=1 ;;
+    --tiered-cache) TIERED=1 ;;
+    *) echo "ERROR: unknown argument $arg (use --yes, --tiered-cache)" >&2; exit 1 ;;
+  esac
+done
+INTERACTIVE=0
+[ -t 0 ] && INTERACTIVE=1
+if [ "$INTERACTIVE" = 0 ] && [ "$YES" = 0 ]; then
+  echo "ERROR: no terminal to ask in. Run it in a terminal, or pass --yes (plus --tiered-cache to turn that on too)." >&2
+  exit 1
+fi
 
 for tool in curl jq gh; do
   command -v "$tool" >/dev/null || { echo "ERROR: $tool not found on PATH." >&2; exit 1; }
@@ -56,6 +75,7 @@ errors() { jq -r '[.errors[]? | "\(.code): \(.message)"] | join("; ")'; }
 
 confirm() {
   local answer
+  [ "$YES" = 1 ] && { echo "$1 yes (--yes)"; return 0; }
   read -r -p "$1 [y/N] " answer
   [ "$answer" = "y" ] || [ "$answer" = "Y" ]
 }
@@ -152,7 +172,7 @@ if [[ " ${todo[*]} " == *" tiered "* ]]; then
   echo "Smart Tiered Cache sends cache misses from every Cloudflare location through one upper tier near the"
   echo "bucket, so a new tile is read from R2 about once instead of once per location. It applies to the whole"
   echo "$ZONE_NAME zone, but only changes anything for responses Cloudflare caches."
-  if confirm "Turn on Smart Tiered Cache for $ZONE_NAME?"; then
+  if { [ "$YES" = 1 ] && [ "$TIERED" = 1 ]; } || { [ "$YES" = 0 ] && confirm "Turn on Smart Tiered Cache for $ZONE_NAME?"; }; then
     out="$(cf PATCH "/zones/$ZONE_ID/cache/tiered_cache_smart_topology_enable" '{"value":"on"}')" ||
       echo "WARNING: couldn't turn it on (needs Zone Settings Edit): $(errors <<<"$out")" >&2
   fi
@@ -170,8 +190,19 @@ gh variable set R2_BUCKET -R "$REPO" --body "$R2_BUCKET"
 gh variable set TILES_URL -R "$REPO" --body "https://$TILES_HOST"
 
 existing_secrets="$(gh secret list -R "$REPO" --json name --jq '.[].name')"
-if grep -qx R2_ACCESS_KEY_ID <<<"$existing_secrets" && grep -qx R2_SECRET_ACCESS_KEY <<<"$existing_secrets" &&
-  ! confirm "R2 key secrets already exist on $REPO. Replace them?"; then
+has_secrets=0
+grep -qx R2_ACCESS_KEY_ID <<<"$existing_secrets" && grep -qx R2_SECRET_ACCESS_KEY <<<"$existing_secrets" && has_secrets=1
+if [ "$INTERACTIVE" = 0 ]; then
+  if [ "$has_secrets" = 1 ]; then
+    echo "    R2 key secrets already set"
+  else
+    echo
+    echo "Last step, by hand: create the workflow's R2 key in the Cloudflare dashboard -> R2 -> Manage API tokens ->"
+    echo "Create Account API token, permission 'Object Read & Write', applied to the bucket $R2_BUCKET only."
+    echo "Add its Access Key ID and Secret Access Key as the secrets R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY at"
+    echo "https://github.com/$REPO/settings/secrets/actions"
+  fi
+elif [ "$has_secrets" = 1 ] && ! confirm "R2 key secrets already exist on $REPO. Replace them?"; then
   echo "    kept the existing R2 key secrets"
 else
   echo
