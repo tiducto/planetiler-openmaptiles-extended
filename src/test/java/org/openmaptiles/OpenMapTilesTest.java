@@ -198,12 +198,12 @@ class OpenMapTilesTest {
     assertNumFeatures("transportation", Map.of(
       "class", "path",
       "subclass", "footway"
-    ), 14, 880, LineString.class);
+    ), 14, 856, LineString.class);
     assertNumFeatures("transportation", Map.of(
       "class", "path",
       "subclass", "footway",
       "over", "pedestrian"
-    ), 14, 45, LineString.class);
+    ), 14, 28, LineString.class);
     assertNumFeatures("transportation", Map.of(
       "class", "primary"
     ), 14, 249, LineString.class);

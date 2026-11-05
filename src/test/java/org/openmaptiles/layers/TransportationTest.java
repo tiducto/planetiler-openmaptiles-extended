@@ -2039,8 +2039,8 @@ class TransportationTest extends AbstractLayerTest {
   void testPathOverPedestrianArea() throws GeometryException {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75), pathLengthsByOver(14, square, path));
-    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75), pathLengthsByOver(13, square, path));
+    assertEquals(Map.of("pedestrian", 10d, "none", 20d), pathLengthsByOver(14, square, path));
+    assertEquals(Map.of("pedestrian", 10d, "none", 20d), pathLengthsByOver(13, square, path));
     assertEquals(Map.of("none", 30d), pathLengthsByOver(12, square, path));
   }
 
@@ -2049,7 +2049,7 @@ class TransportationTest extends AbstractLayerTest {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     var platform = transportationFeature(rectangle(12, 18), Map.of("class", "path", "subclass", "platform"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("platform", 6.25, "pedestrian", 4d, "none", 19.75),
+    assertEquals(Map.of("platform", 6d, "pedestrian", 4d, "none", 20d),
       pathLengthsByOver(14, path, square, platform));
   }
 
@@ -2057,7 +2057,7 @@ class TransportationTest extends AbstractLayerTest {
   void testPathOverPier() throws GeometryException {
     var pier = transportationFeature(rectangle(10, 20), Map.of("class", "pier"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("pier", 10.25, "none", 19.75), pathLengthsByOver(14, pier, path));
+    assertEquals(Map.of("pier", 10d, "none", 20d), pathLengthsByOver(14, pier, path));
   }
 
   @Test
@@ -2065,8 +2065,22 @@ class TransportationTest extends AbstractLayerTest {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     assertEquals(Map.of("pedestrian", 10d),
       pathLengthsByOver(14, square, transportationFeature(newLineString(10, 10, 20, 10), FOOTWAY)));
-    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75),
+    assertEquals(Map.of("pedestrian", 10d, "none", 20d),
       pathLengthsByOver(14, square, transportationFeature(newLineString(0, 10, 30, 10), FOOTWAY)));
+  }
+
+  @Test
+  void testPathKeepsJunctionsAtMaxZoom() throws GeometryException {
+    var bend = newLineString(0, 10, 10, 10 + 1d / 16, 20, 10);
+    assertEquals(3, mergedPoints(14, transportationFeature(bend, FOOTWAY)));
+    assertEquals(2, mergedPoints(13, transportationFeature(bend, FOOTWAY)));
+    assertEquals(2, mergedPoints(14, transportationFeature(bend, Map.of("class", "minor"))));
+  }
+
+  private int mergedPoints(int zoom, VectorTile.Feature feature) throws GeometryException {
+    var merged = profile.postProcessLayerFeatures(Transportation.LAYER_NAME, zoom, List.of(feature));
+    assertEquals(1, merged.size());
+    return merged.getFirst().geometry().decode().getNumPoints();
   }
 
   @Test
