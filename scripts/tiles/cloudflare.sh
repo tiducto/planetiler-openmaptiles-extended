@@ -4,8 +4,9 @@
 # run on every build: it only creates or updates what is missing or different.
 #   - R2 bucket R2_BUCKET (EU location hint) with a read-only CORS policy, so web viewers can load tiles too
 #   - custom domain TILES_HOST on that bucket, so tiles go through Cloudflare's cache (r2.dev is rate limited)
-#   - cache rule for TILES_HOST: cache everything, honouring the Cache-Control headers set at upload, and keep
-#     "not found" answers for a day, so a missing tile reaches R2 at most once a day
+#   - cache rules for TILES_HOST: cache everything, honouring the Cache-Control headers set at upload, except tiles,
+#     which stay for 30 days, as publish.sh purges a slot before it goes live; keep "not found" answers for a day, so
+#     a missing tile reaches R2 at most once a day
 #   - firewall rule for TILES_HOST: block everything but a GET of the TileJSON or a tile without a query string, so
 #     requests made up to get past the cache never reach R2 (HEAD and OPTIONS skip the cache, MapLibre sends neither)
 #   - with --tiered-cache, Smart Tiered Cache on the zone
@@ -13,12 +14,12 @@
 # Usage: settings="$(scripts/tiles/cloudflare.sh [--tiered-cache])"
 #
 # Needs curl, jq and CLOUDFLARE_API_TOKEN, an account API token (or a user API token) with:
-#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Settings Edit, Zone Settings Edit, DNS Edit,
-#   WAF Edit
+#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Settings Edit, Cache Purge, Zone Settings
+#   Edit, DNS Edit, WAF Edit
 # The same token is the R2 upload key: its id is the access key ID and the SHA-256 of its value the secret.
 #
-# Prints R2_ACCOUNT_ID, R2_BUCKET, TILES_URL, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY as NAME=value lines on
-# stdout; everything else goes to stderr. The caller must mask R2_SECRET_ACCESS_KEY before logging it.
+# Prints R2_ACCOUNT_ID, R2_BUCKET, TILES_URL, CLOUDFLARE_ZONE_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY as
+# NAME=value lines on stdout; everything else goes to stderr. The caller must mask R2_SECRET_ACCESS_KEY before logging it.
 #
 # Override with env vars: ZONE_NAME, TILES_HOST, R2_BUCKET.
 
@@ -28,6 +29,7 @@ ZONE_NAME="${ZONE_NAME:-tiducto.eu}"
 TILES_HOST="${TILES_HOST:-tiles.$ZONE_NAME}"
 R2_BUCKET="${R2_BUCKET:-tiducto-tiles}"
 CACHE_RULE_REF="tiles_cache_everything"
+TILE_CACHE_RULE_REF="tiles_keep_tiles_until_purged"
 FIREWALL_RULE_REF="tiles_allow_only_tiles"
 API="https://api.cloudflare.com/client/v4"
 : "${CLOUDFLARE_API_TOKEN:?set CLOUDFLARE_API_TOKEN}"
@@ -123,6 +125,24 @@ CACHE_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$CACHE_RULE_REF" '{
 }')"
 upsert_rule http_request_cache_settings "$CACHE_RULE_REF" "$CACHE_RULE" "cache rule" "Cache Settings Edit"
 
+TILE_CACHE_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$TILE_CACHE_RULE_REF" '{
+  ref: $ref,
+  description: "Keep tiles for 30 days: publish.sh purges a slot before it goes live; keep misses for a day",
+  expression: "(http.host eq \"\($host)\" and http.request.uri.path wildcard \"/v/*/*/*/*.pbf\")",
+  action: "set_cache_settings",
+  action_parameters: {
+    cache: true,
+    edge_ttl: {mode: "override_origin", default: 2592000, status_code_ttl: [{status_code: 404, value: 86400}]},
+    browser_ttl: {mode: "respect_origin"}
+  },
+  enabled: true
+}')"
+upsert_rule http_request_cache_settings "$TILE_CACHE_RULE_REF" "$TILE_CACHE_RULE" "tile cache rule" "Cache Settings Edit"
+
+out="$(cf POST "/zones/$ZONE_ID/purge_cache" "$(jq -n --arg url "https://$TILES_HOST/v/purge-check" '{files: [$url]}')")" ||
+  fail "can't purge the cache (needs Cache Purge): $(errors <<<"$out")"
+log "cache purge: allowed"
+
 FIREWALL_RULE="$(jq -n --arg host "$TILES_HOST" --arg ref "$FIREWALL_RULE_REF" '{
   ref: $ref,
   description: "Only the TileJSON and tiles, so made-up requests never reach R2",
@@ -150,5 +170,6 @@ fi
 echo "R2_ACCOUNT_ID=$ACCOUNT_ID"
 echo "R2_BUCKET=$R2_BUCKET"
 echo "TILES_URL=https://$TILES_HOST"
+echo "CLOUDFLARE_ZONE_ID=$ZONE_ID"
 echo "R2_ACCESS_KEY_ID=$TOKEN_ID"
 echo "R2_SECRET_ACCESS_KEY=$SECRET"

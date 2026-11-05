@@ -22,7 +22,7 @@ jobs:
     name: Build and publish tiles
     if: github.repository == 'tiducto/planetiler-openmaptiles-extended'
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - name: Check the Cloudflare token
         env:
@@ -72,6 +72,8 @@ jobs:
         run: scripts/tiles/build.sh /mnt/tiles
       - name: Publish tiles
         if: ${{ !inputs.setup_only }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: scripts/tiles/publish.sh /mnt/tiles
       - name: Keep the schedule enabled
         if: always()
