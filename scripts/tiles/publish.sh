@@ -118,5 +118,5 @@ rclone lsf --dirs-only "r2:$R2_BUCKET/v/" | sed 's#/$##' | while read -r dir; do
     "$SLOT" | "$LIVE") continue ;;
   esac
   echo "Deleting $dir"
-  rclone purge "r2:$R2_BUCKET/v/$dir"
+  rclone purge "r2:$R2_BUCKET/v/$dir" --checkers 64 --transfers 64
 done
