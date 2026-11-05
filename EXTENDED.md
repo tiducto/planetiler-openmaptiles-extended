@@ -43,5 +43,5 @@ Clients use `https://tiles.tiducto.eu/openmaptiles.json` as the vector source UR
 
 The only setting is the repository secret `CLOUDFLARE_API_TOKEN`, a Cloudflare account API token (Manage account →
 Account API tokens; a user API token works too) with Account → Workers R2 Storage → Edit, and Zone → Zone → Read,
-Cache Rules → Edit, Zone Settings → Edit and DNS → Edit on `tiducto.eu`. The same token is the R2 upload key: its id
+Cache Settings → Edit, Zone Settings → Edit and DNS → Edit on `tiducto.eu`. The same token is the R2 upload key: its id
 is the access key ID and the SHA-256 of its value the secret access key.

@@ -10,7 +10,7 @@
 # Usage: settings="$(scripts/tiles/cloudflare.sh [--tiered-cache])"
 #
 # Needs curl, jq and CLOUDFLARE_API_TOKEN, an account API token (or a user API token) with:
-#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Rules Edit, Zone Settings Edit, DNS Edit
+#   Account: Workers R2 Storage Edit; Zone (ZONE_NAME): Zone Read, Cache Settings Edit, Zone Settings Edit, DNS Edit
 # The same token is the R2 upload key: its id is the access key ID and the SHA-256 of its value the secret.
 #
 # Prints R2_ACCOUNT_ID, R2_BUCKET, TILES_URL, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY as NAME=value lines on
@@ -97,15 +97,15 @@ RULESET_ID="$(jq -r '.result.id // empty' <<<"$ENTRYPOINT")"
 RULE_ID="$(jq -r --arg ref "$RULE_REF" '.result.rules[]? | select(.ref == $ref) | .id' <<<"$ENTRYPOINT")"
 if [ -z "$RULESET_ID" ]; then
   out="$(cf PUT "/zones/$ZONE_ID/rulesets/phases/http_request_cache_settings/entrypoint" \
-    "$(jq -n --argjson rule "$RULE" '{rules: [$rule]}')")" || fail "can't create the cache rule (needs Cache Rules Edit): $(errors <<<"$out")"
+    "$(jq -n --argjson rule "$RULE" '{rules: [$rule]}')")" || fail "can't create the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
   log "cache rule: created"
 elif [ -n "$RULE_ID" ]; then
   out="$(cf PATCH "/zones/$ZONE_ID/rulesets/$RULESET_ID/rules/$RULE_ID" "$RULE")" ||
-    fail "can't update the cache rule (needs Cache Rules Edit): $(errors <<<"$out")"
+    fail "can't update the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
   log "cache rule: up to date"
 else
   out="$(cf POST "/zones/$ZONE_ID/rulesets/$RULESET_ID/rules" "$RULE")" ||
-    fail "can't add the cache rule (needs Cache Rules Edit): $(errors <<<"$out")"
+    fail "can't add the cache rule (needs Cache Settings Edit): $(errors <<<"$out")"
   log "cache rule: added"
 fi
 
