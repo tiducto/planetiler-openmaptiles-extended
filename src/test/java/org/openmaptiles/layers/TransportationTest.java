@@ -2039,8 +2039,8 @@ class TransportationTest extends AbstractLayerTest {
   void testPathOverPedestrianArea() throws GeometryException {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("pedestrian", 9.75, "none", 20.25), pathLengthsByOver(14, square, path));
-    assertEquals(Map.of("pedestrian", 9.75, "none", 20.25), pathLengthsByOver(13, square, path));
+    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75), pathLengthsByOver(14, square, path));
+    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75), pathLengthsByOver(13, square, path));
     assertEquals(Map.of("none", 30d), pathLengthsByOver(12, square, path));
   }
 
@@ -2049,7 +2049,7 @@ class TransportationTest extends AbstractLayerTest {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     var platform = transportationFeature(rectangle(12, 18), Map.of("class", "path", "subclass", "platform"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("platform", 5.75, "pedestrian", 4d, "none", 20.25),
+    assertEquals(Map.of("platform", 6.25, "pedestrian", 4d, "none", 19.75),
       pathLengthsByOver(14, path, square, platform));
   }
 
@@ -2057,15 +2057,22 @@ class TransportationTest extends AbstractLayerTest {
   void testPathOverPier() throws GeometryException {
     var pier = transportationFeature(rectangle(10, 20), Map.of("class", "pier"));
     var path = transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY);
-    assertEquals(Map.of("pier", 9.75, "none", 20.25), pathLengthsByOver(14, pier, path));
+    assertEquals(Map.of("pier", 10.25, "none", 19.75), pathLengthsByOver(14, pier, path));
+  }
+
+  @Test
+  void testPathAlongAreaEdge() throws GeometryException {
+    var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
+    assertEquals(Map.of("pedestrian", 10d),
+      pathLengthsByOver(14, square, transportationFeature(newLineString(10, 10, 20, 10), FOOTWAY)));
+    assertEquals(Map.of("pedestrian", 10.25, "none", 19.75),
+      pathLengthsByOver(14, square, transportationFeature(newLineString(0, 10, 30, 10), FOOTWAY)));
   }
 
   @Test
   void testPathNotOverArea() throws GeometryException {
     var square = transportationFeature(rectangle(10, 20), Map.of("class", "path", "subclass", "pedestrian"));
     var bridgeDeck = transportationFeature(rectangle(10, 20), Map.of("class", "bridge"));
-    assertEquals(Map.of("none", 10d),
-      pathLengthsByOver(14, square, transportationFeature(newLineString(10, 10, 20, 10), FOOTWAY)));
     assertEquals(Map.of("none", 30d),
       pathLengthsByOver(14, bridgeDeck, transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY)));
     assertEquals(Map.of("none", 30d), pathLengthsByOver(14, square, transportationFeature(
