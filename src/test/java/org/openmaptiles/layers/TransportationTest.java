@@ -323,6 +323,54 @@ class TransportationTest extends AbstractLayerTest {
   }
 
   @Test
+  void testCovered() {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "footway",
+      "covered", 1
+    )), process(lineFeature(Map.of(
+      "highway", "footway",
+      "covered", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "footway",
+      "covered", 1
+    )), process(lineFeature(Map.of(
+      "highway", "footway",
+      "covered", "arcade"
+    ))));
+    assertFeatures(13, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "pedestrian",
+      "covered", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "pedestrian",
+      "covered", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "footway",
+      "covered", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "footway",
+      "covered", "no"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "minor",
+      "covered", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "residential",
+      "covered", "yes"
+    ))));
+  }
+
+  @Test
   void testToll() {
     assertFeatures(9, List.of(Map.of(
       "_layer", "transportation",

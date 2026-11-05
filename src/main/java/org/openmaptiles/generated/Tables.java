@@ -349,11 +349,12 @@ public class Tables {
     @Override String publicTransport, @Override String manMade, @Override String bicycle, @Override String foot,
     @Override String horse, @Override String mtbScale, @Override String sacScale, @Override String operator,
     @Override String informal, @Override String surface, @Override boolean expressway, @Override boolean motorroad,
+    @Override boolean covered,
     @Override SourceFeature source) implements Row, WithHighway, WithConstruction, WithTracktype, WithRef, WithNetwork,
     WithZOrder, WithLayer, WithLevel, WithIndoor, WithName, WithNameEn, WithNameDe, WithIsTunnel, WithIsBridge,
     WithIsRamp, WithIsFord, WithIsOneway, WithIsArea, WithService, WithAccess, WithToll, WithUsage, WithPublicTransport,
     WithManMade, WithBicycle, WithFoot, WithHorse, WithMtbScale, WithSacScale, WithOperator, WithInformal, WithSurface,
-    WithExpressway, WithMotorroad, WithSource {
+    WithExpressway, WithMotorroad, WithCovered, WithSource {
     public OsmHighwayLinestring(SourceFeature source, String mappingKey) {
       this(source.getString("highway"), source.getString("construction"), source.getString("tracktype"),
         source.getString("ref"), source.getString("network"), source.getWayZorder(), source.getLong("layer"),
@@ -364,7 +365,8 @@ public class Tables {
         source.getString("public_transport"), source.getString("man_made"), source.getString("bicycle"),
         source.getString("foot"), source.getString("horse"), source.getString("mtb:scale"),
         source.getString("sac_scale"), source.getString("operator"), source.getString("informal"),
-        source.getString("surface"), source.getBoolean("expressway"), source.getBoolean("motorroad"), source);
+        source.getString("surface"), source.getBoolean("expressway"), source.getBoolean("motorroad"),
+        source.getBoolean("covered"), source);
     }
 
     /** Imposm3 "mapping" to filter OSM elements that should appear in this "table". */
@@ -996,6 +998,11 @@ public class Tables {
   /** Rows with a String countryCodeIso31661Alpha2 attribute. */
   public interface WithCountryCodeIso31661Alpha2 {
     String countryCodeIso31661Alpha2();
+  }
+
+  /** Rows with a boolean covered attribute. */
+  public interface WithCovered {
+    boolean covered();
   }
 
   /** Rows with a String ele attribute. */

@@ -1091,6 +1091,18 @@ public class OpenMapTilesSchema {
        * </ul>
        */
       public static final String OVER = "over";
+
+      /**
+       * Filled only on <code>path</code> lines from z14: whether the path runs under a roof, an arcade or a canopy,
+       * based on the <a href="http://wiki.openstreetmap.org/wiki/Key:covered"><code>covered</code></a> tag (any value
+       * but <code>no</code>), so styles can show it through the roof that covers it, as they do tunnels.
+       * <p>
+       * allowed values:
+       * <ul>
+       * <li>1
+       * </ul>
+       */
+      public static final String COVERED = "covered";
       /**
        * Original value of the <a href="http://wiki.openstreetmap.org/wiki/Key:bicycle"><code>bicycle</code></a> tag
        * (highways only).
