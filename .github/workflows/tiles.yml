@@ -1,0 +1,63 @@
+name: Tiles
+
+on:
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: tiles
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  tiles:
+    name: Build and publish tiles
+    if: github.repository == 'tiducto/planetiler-openmaptiles-extended'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      TILES_URL: ${{ vars.TILES_URL }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Check settings
+        run: |
+          missing=()
+          for name in R2_ACCOUNT_ID R2_BUCKET TILES_URL R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing ${missing[*]}. Run scripts/tiles/setup-cloudflare.sh to set them."
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: maven
+      - name: Install tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q osmium-tool rclone jq
+      - name: Build Planetiler
+        run: ./mvnw -B -q -DskipTests package
+      - name: Prepare work dir
+        run: |
+          sudo mkdir -p /mnt/tiles
+          sudo chown "$USER" /mnt/tiles
+          df -h /mnt
+      - name: Build tiles
+        run: scripts/tiles/build.sh /mnt/tiles
+      - name: Publish tiles
+        run: scripts/tiles/publish.sh /mnt/tiles
+      - name: Keep the schedule enabled
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/tiles.yml/enable"
