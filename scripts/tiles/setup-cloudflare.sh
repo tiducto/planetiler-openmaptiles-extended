@@ -20,9 +20,10 @@
 #
 # Needs curl, jq and gh (logged in with admin rights on REPO), and a Cloudflare API token with:
 #   Account: Workers R2 Storage Edit; Zone: Zone Read, Cache Rules Edit, Zone Settings Edit, DNS Edit
-# taken from CLOUDFLARE_API_TOKEN or, when unset, from the `cloudflare-api-token` Secret Manager secret via gcloud.
+# taken from CLOUDFLARE_API_TOKEN or, when unset, from the Secret Manager secret CLOUDFLARE_TOKEN_SECRET
+# (default `cloudflare-api-token`) in GCP_PROJECT_ID via gcloud.
 #
-# Override with env vars: ZONE_NAME, TILES_HOST, R2_BUCKET, REPO, GCP_PROJECT_ID.
+# Override with env vars: ZONE_NAME, TILES_HOST, R2_BUCKET, REPO, GCP_PROJECT_ID, CLOUDFLARE_TOKEN_SECRET.
 
 set -euo pipefail
 
@@ -31,6 +32,7 @@ TILES_HOST="${TILES_HOST:-tiles.$ZONE_NAME}"
 R2_BUCKET="${R2_BUCKET:-tiducto-tiles}"
 REPO="${REPO:-tiducto/planetiler-openmaptiles-extended}"
 PROJECT="${GCP_PROJECT_ID:-tiducto-spider}"
+TOKEN_SECRET="${CLOUDFLARE_TOKEN_SECRET:-cloudflare-api-token}"
 RULE_REF="tiles_cache_everything"
 API="https://api.cloudflare.com/client/v4"
 
@@ -58,7 +60,7 @@ gh repo view "$REPO" >/dev/null 2>&1 || { echo "ERROR: can't see $REPO with gh. 
 
 if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
   command -v gcloud >/dev/null || { echo "ERROR: set CLOUDFLARE_API_TOKEN (gcloud not found to read it)." >&2; exit 1; }
-  CLOUDFLARE_API_TOKEN="$(gcloud secrets versions access latest --secret=cloudflare-api-token --project "$PROJECT")"
+  CLOUDFLARE_API_TOKEN="$(gcloud secrets versions access latest --secret="$TOKEN_SECRET" --project "$PROJECT")"
 fi
 
 # cf METHOD PATH [JSON]: prints the response body, returns non-zero unless Cloudflare reports success.
