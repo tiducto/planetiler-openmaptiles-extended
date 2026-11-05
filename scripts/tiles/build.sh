@@ -10,6 +10,8 @@
 #   JAVA_XMX  Planetiler heap (default: 8g)
 #   SKIP_OSM_DOWNLOAD=1 reuses WORK_DIR/osm/*.osm.pbf instead of downloading them again
 #
+# Water polygons come from osmdata.openstreetmap.de, or from the FAU mirror's newest copy when that is down.
+#
 # Needs: java, curl, osmium (only when merging several extracts), and the jar from ./mvnw -DskipTests package.
 
 set -euo pipefail
@@ -24,6 +26,30 @@ JAR="$(ls "$ROOT"/target/planetiler-openmaptiles-*-with-deps.jar 2>/dev/null | h
 [ -n "$JAR" ] || { echo "No Planetiler jar in $ROOT/target; run ./mvnw -DskipTests package first." >&2; exit 1; }
 
 mkdir -p "$WORK_DIR/osm" "$WORK_DIR/sources"
+
+WATER="$WORK_DIR/sources/water-polygons-split-3857.zip"
+WATER_URL="https://osmdata.openstreetmap.de/download/water-polygons-split-3857.zip"
+WATER_MIRROR="https://ftp.fau.de/mirrors/openstreetmapdata.com-archive"
+fetch_water() {
+  if curl -fsSL --connect-timeout 20 --retry 2 -o "$WATER.part" "$WATER_URL"; then
+    mv "$WATER.part" "$WATER"
+    echo "Water polygons from osmdata.openstreetmap.de"
+    return
+  fi
+  echo "osmdata.openstreetmap.de is unreachable, trying the FAU mirror"
+  local days
+  days="$(curl -fsSL --retry 3 "$WATER_MIRROR/" | grep -oE 'href="[0-9]{4}-[0-9]{2}-[0-9]{2}/"' | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | sort -r | sed -n '1,10p')"
+  for day in $days; do
+    if curl -fsSL --retry 3 -o "$WATER.part" "$WATER_MIRROR/$day/water-polygons-split-3857.zip"; then
+      mv "$WATER.part" "$WATER"
+      echo "Water polygons from the FAU mirror, $day"
+      return
+    fi
+  done
+  echo "No water polygons from osmdata.openstreetmap.de or the FAU mirror" >&2
+  exit 1
+}
+[ -s "$WATER" ] || fetch_water
 
 if [ "${SKIP_OSM_DOWNLOAD:-0}" != "1" ]; then
   rm -f "$WORK_DIR"/osm/*.osm.pbf
