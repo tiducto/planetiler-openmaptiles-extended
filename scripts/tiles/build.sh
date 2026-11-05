@@ -64,7 +64,9 @@ fi
 extracts=("$WORK_DIR"/osm/*.osm.pbf)
 if [ "${#extracts[@]}" -gt 1 ]; then
   echo "Merging ${#extracts[@]} extracts"
-  osmium merge --overwrite --output "$WORK_DIR/region.osm.pbf" "${extracts[@]}"
+  osmium merge --overwrite --output "$WORK_DIR/merged.osh.pbf" "${extracts[@]}"
+  osmium time-filter --overwrite --output "$WORK_DIR/region.osm.pbf" "$WORK_DIR/merged.osh.pbf"
+  rm -f "$WORK_DIR/merged.osh.pbf"
 else
   cp "${extracts[0]}" "$WORK_DIR/region.osm.pbf"
 fi
