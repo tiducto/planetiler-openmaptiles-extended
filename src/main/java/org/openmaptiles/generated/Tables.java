@@ -349,12 +349,11 @@ public class Tables {
     @Override String publicTransport, @Override String manMade, @Override String bicycle, @Override String foot,
     @Override String horse, @Override String mtbScale, @Override String sacScale, @Override String operator,
     @Override String informal, @Override String surface, @Override boolean expressway, @Override boolean motorroad,
-    @Override boolean covered,
-    @Override SourceFeature source) implements Row, WithHighway, WithConstruction, WithTracktype, WithRef, WithNetwork,
-    WithZOrder, WithLayer, WithLevel, WithIndoor, WithName, WithNameEn, WithNameDe, WithIsTunnel, WithIsBridge,
-    WithIsRamp, WithIsFord, WithIsOneway, WithIsArea, WithService, WithAccess, WithToll, WithUsage, WithPublicTransport,
-    WithManMade, WithBicycle, WithFoot, WithHorse, WithMtbScale, WithSacScale, WithOperator, WithInformal, WithSurface,
-    WithExpressway, WithMotorroad, WithCovered, WithSource {
+    @Override boolean covered, @Override SourceFeature source) implements Row, WithHighway, WithConstruction,
+    WithTracktype, WithRef, WithNetwork, WithZOrder, WithLayer, WithLevel, WithIndoor, WithName, WithNameEn, WithNameDe,
+    WithIsTunnel, WithIsBridge, WithIsRamp, WithIsFord, WithIsOneway, WithIsArea, WithService, WithAccess, WithToll,
+    WithUsage, WithPublicTransport, WithManMade, WithBicycle, WithFoot, WithHorse, WithMtbScale, WithSacScale,
+    WithOperator, WithInformal, WithSurface, WithExpressway, WithMotorroad, WithCovered, WithSource {
     public OsmHighwayLinestring(SourceFeature source, String mappingKey) {
       this(source.getString("highway"), source.getString("construction"), source.getString("tracktype"),
         source.getString("ref"), source.getString("network"), source.getWayZorder(), source.getLong("layer"),
