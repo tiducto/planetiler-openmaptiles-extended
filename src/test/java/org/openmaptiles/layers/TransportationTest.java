@@ -264,6 +264,59 @@ class TransportationTest extends AbstractLayerTest {
   }
 
   @Test
+  void testMotorroad() {
+    assertFeatures(8, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "primary",
+      "motorroad", 1
+    )), process(lineFeature(Map.of(
+      "highway", "primary",
+      "motorroad", "yes"
+    ))));
+    assertFeatures(12, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "trunk",
+      "ramp", 1,
+      "motorroad", 1
+    )), process(lineFeature(Map.of(
+      "highway", "trunk_link",
+      "motorroad", "yes"
+    ))));
+    assertFeatures(8, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "primary",
+      "motorroad", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "primary",
+      "motorroad", "no"
+    ))));
+    assertFeatures(8, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "motorway",
+      "motorroad", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "motorway",
+      "motorroad", "yes"
+    ))));
+    assertFeatures(12, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "motorway",
+      "motorroad", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "motorway_link",
+      "motorroad", "yes"
+    ))));
+    assertFeatures(7, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "primary",
+      "motorroad", "<null>"
+    )), process(lineFeature(Map.of(
+      "highway", "primary",
+      "motorroad", "yes"
+    ))));
+  }
+
+  @Test
   void testToll() {
     assertFeatures(9, List.of(Map.of(
       "_layer", "transportation",

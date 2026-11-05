@@ -348,12 +348,12 @@ public class Tables {
     @Override String service, @Override String access, @Override boolean toll, @Override String usage,
     @Override String publicTransport, @Override String manMade, @Override String bicycle, @Override String foot,
     @Override String horse, @Override String mtbScale, @Override String sacScale, @Override String operator,
-    @Override String informal, @Override String surface, @Override boolean expressway, @Override SourceFeature source)
-    implements Row, WithHighway, WithConstruction, WithTracktype, WithRef, WithNetwork, WithZOrder, WithLayer,
-    WithLevel, WithIndoor, WithName, WithNameEn, WithNameDe, WithIsTunnel, WithIsBridge, WithIsRamp, WithIsFord,
-    WithIsOneway, WithIsArea, WithService, WithAccess, WithToll, WithUsage, WithPublicTransport, WithManMade,
-    WithBicycle, WithFoot, WithHorse, WithMtbScale, WithSacScale, WithOperator, WithInformal, WithSurface,
-    WithExpressway, WithSource {
+    @Override String informal, @Override String surface, @Override boolean expressway, @Override boolean motorroad,
+    @Override SourceFeature source) implements Row, WithHighway, WithConstruction, WithTracktype, WithRef, WithNetwork,
+    WithZOrder, WithLayer, WithLevel, WithIndoor, WithName, WithNameEn, WithNameDe, WithIsTunnel, WithIsBridge,
+    WithIsRamp, WithIsFord, WithIsOneway, WithIsArea, WithService, WithAccess, WithToll, WithUsage, WithPublicTransport,
+    WithManMade, WithBicycle, WithFoot, WithHorse, WithMtbScale, WithSacScale, WithOperator, WithInformal, WithSurface,
+    WithExpressway, WithMotorroad, WithSource {
     public OsmHighwayLinestring(SourceFeature source, String mappingKey) {
       this(source.getString("highway"), source.getString("construction"), source.getString("tracktype"),
         source.getString("ref"), source.getString("network"), source.getWayZorder(), source.getLong("layer"),
@@ -364,7 +364,7 @@ public class Tables {
         source.getString("public_transport"), source.getString("man_made"), source.getString("bicycle"),
         source.getString("foot"), source.getString("horse"), source.getString("mtb:scale"),
         source.getString("sac_scale"), source.getString("operator"), source.getString("informal"),
-        source.getString("surface"), source.getBoolean("expressway"), source);
+        source.getString("surface"), source.getBoolean("expressway"), source.getBoolean("motorroad"), source);
     }
 
     /** Imposm3 "mapping" to filter OSM elements that should appear in this "table". */
@@ -1186,6 +1186,11 @@ public class Tables {
   /** Rows with a String minLevel attribute. */
   public interface WithMinLevel {
     String minLevel();
+  }
+
+  /** Rows with a boolean motorroad attribute. */
+  public interface WithMotorroad {
+    boolean motorroad();
   }
 
   /** Rows with a String mtbScale attribute. */

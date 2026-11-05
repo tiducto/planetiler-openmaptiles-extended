@@ -1037,6 +1037,19 @@ public class OpenMapTilesSchema {
        * </ul>
        */
       public static final String EXPRESSWAY = "expressway";
+
+      /**
+       * Whether this is a motorroad, based on the
+       * <a href="http://wiki.openstreetmap.org/wiki/Key:motorroad"><code>motorroad</code></a> tag: a road restricted to
+       * motor vehicles like a motorway, but not classed as one (for example a German Kraftfahrstraße). Not set on
+       * <code>motorway</code> roads, which carry the same restrictions.
+       * <p>
+       * allowed values:
+       * <ul>
+       * <li>1
+       * </ul>
+       */
+      public static final String MOTORROAD = "motorroad";
       /** Original value of the <a href="http://wiki.openstreetmap.org/wiki/Key:layer"><code>layer</code></a> tag. */
       public static final String LAYER = "layer";
       /**
