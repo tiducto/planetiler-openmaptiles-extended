@@ -94,10 +94,12 @@ public class WaterName implements
   // may be updated concurrently by multiple threads
   private final ConcurrentSkipListMap<String, NaturalEarthRegion> importantMarinePoints = new ConcurrentSkipListMap<>();
   private final Stats stats;
+  private final PlanetilerConfig config;
 
   public WaterName(Translations translations, PlanetilerConfig config, Stats stats) {
     this.translations = translations;
     this.stats = stats;
+    this.config = config;
   }
 
   @Override
@@ -242,7 +244,7 @@ public class WaterName implements
       if (centerlineGeometry == null || minzoom < minzoomCL) {
         // use a label point inside the lake but ...
         // ... if centerline already created, adjust maxzoom here to make sure we're not having both at same zoom level
-        int maxzoom = centerlineGeometry != null ? minzoomCL - 1 : 14;
+        int maxzoom = centerlineGeometry != null ? minzoomCL - 1 : config.maxzoom();
         setupOsmWaterPolygonFeature(element, features.pointOnSurface(LAYER_NAME), clazz, minzoom)
           .setMaxZoom(maxzoom)
           // Show a label if a water feature covers at least 1/4 of a tile or z14+

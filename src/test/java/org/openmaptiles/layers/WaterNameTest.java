@@ -3,9 +3,13 @@ package org.openmaptiles.layers;
 import static com.onthegomap.planetiler.TestUtils.newLineString;
 import static com.onthegomap.planetiler.TestUtils.rectangle;
 
+import com.onthegomap.planetiler.FeatureCollector;
 import com.onthegomap.planetiler.TestUtils;
+import com.onthegomap.planetiler.config.Arguments;
+import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.reader.SimpleFeature;
+import com.onthegomap.planetiler.stats.Stats;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,27 @@ class WaterNameTest extends AbstractLayerTest {
       "water", "pond",
       "intermittent", "1"
     ))));
+  }
+
+  @Test
+  void testWaterNamePointUpToConfiguredMaxzoom() {
+    var config = PlanetilerConfig.from(Arguments.of(Map.of("maxzoom", "15")));
+    var profileZ15 = new OpenMapTilesProfile(translations, config, Stats.inMemory());
+    var feature = polygonFeatureWithArea(1, Map.of(
+      "name", "waterway",
+      "natural", "water",
+      "water", "pond"
+    ));
+    var collector = new FeatureCollector.Factory(config, stats).get(feature);
+    profileZ15.processFeature(feature, collector);
+    assertFeatures(15, List.of(Map.of(
+      "_layer", "water"
+    ), Map.of(
+      "class", "lake",
+      "_layer", "water_name",
+      "_type", "point",
+      "_maxzoom", 15
+    )), collector);
   }
 
   @Test
