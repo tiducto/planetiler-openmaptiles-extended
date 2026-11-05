@@ -11,8 +11,10 @@
 #   TILES_URL      public base URL of the bucket, e.g. https://tiles.tiducto.eu
 #   VERSION        version folder (default: UTC time of the upload, e.g. 20261109T0323Z)
 #   KEEP_VERSIONS  versions to keep, the new one included (default: 2)
+#   R2_ENDPOINT    S3 endpoint (default: the account's R2 endpoint)
 #
-# Needs: rclone, jq.
+# Needs: jq and a current rclone (1.72 tested). Ubuntu 24.04's rclone 1.60 adds x-amz-acl to every upload, which R2
+# answers with 501 Not Implemented.
 
 set -euo pipefail
 
@@ -27,16 +29,25 @@ export RCLONE_CONFIG_R2_TYPE=s3
 export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
 export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
 export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
-export RCLONE_CONFIG_R2_ENDPOINT="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+export RCLONE_CONFIG_R2_ENDPOINT="${R2_ENDPOINT:-https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com}"
 export RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true
+
+TILE_HEADERS=(
+  --header-upload 'Content-Type: application/x-protobuf'
+  --header-upload 'Content-Encoding: gzip'
+  --header-upload 'Cache-Control: public, max-age=31536000, immutable'
+)
+
+FIRST_TILE="$(cd "$TILES_DIR" && find . -name '*.pbf' -print -quit)"
+FIRST_TILE="${FIRST_TILE#./}"
+echo "Uploading $FIRST_TILE first"
+rclone copyto "$TILES_DIR/$FIRST_TILE" "r2:$R2_BUCKET/v/$VERSION/$FIRST_TILE" "${TILE_HEADERS[@]}" --retries 1
 
 echo "Uploading tiles to $R2_BUCKET/v/$VERSION"
 rclone copy "$TILES_DIR" "r2:$R2_BUCKET/v/$VERSION" \
   --include '*.pbf' \
   --transfers 64 --checkers 64 \
-  --header-upload 'Content-Type: application/x-protobuf' \
-  --header-upload 'Content-Encoding: gzip' \
-  --header-upload 'Cache-Control: public, max-age=31536000, immutable' \
+  "${TILE_HEADERS[@]}" \
   --stats 30s --stats-one-line --stats-log-level NOTICE
 
 TILEJSON="$WORK_DIR/openmaptiles.json"

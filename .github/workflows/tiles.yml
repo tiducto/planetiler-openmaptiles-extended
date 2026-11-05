@@ -34,9 +34,17 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Install tools
+        env:
+          RCLONE_VERSION: v1.72.1
+          RCLONE_SHA256: a385c04469160e28ea37b3c5f6accd15c7f78f819398077c622c7f31e3eec43b
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q osmium-tool rclone jq
+          sudo apt-get install -y -q osmium-tool jq
+          deb="rclone-$RCLONE_VERSION-linux-amd64.deb"
+          curl -fsSL -o "$RUNNER_TEMP/$deb" "https://downloads.rclone.org/$RCLONE_VERSION/$deb"
+          echo "$RCLONE_SHA256  $RUNNER_TEMP/$deb" | sha256sum -c -
+          sudo dpkg -i "$RUNNER_TEMP/$deb"
+          rclone version | head -1
       - name: Set up Cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
