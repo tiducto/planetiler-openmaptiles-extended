@@ -510,6 +510,7 @@ public class Transportation implements
       Integer rampBelowZ12 = highwayRamp ? 1 : null;
 
       boolean expressway = element.expressway() && !"motorway".equals(highway) && !(element.isRamp() || highwayRamp);
+      boolean motorroad = element.motorroad() && !"motorway".equals(highway) && !"motorway_link".equals(highway);
 
       FeatureCollector.Feature feature = features.line(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
         // main attributes at all zoom levels (used for grouping <= z8)
@@ -519,6 +520,7 @@ public class Transportation implements
         .setAttrWithMinSize(Fields.BRUNNEL, brunnel(element.isBridge(), element.isTunnel(), element.isFord()), 4, 4, 12)
         // z8+
         .setAttrWithMinzoom(Fields.EXPRESSWAY, expressway ? 1 : null, 8)
+        .setAttrWithMinzoom(Fields.MOTORROAD, motorroad ? 1 : null, 8)
         // z9+
         .setAttrWithMinSize(Fields.LAYER, nullIfLong(element.layer(), 0), 4, 9, 12)
         .setAttrWithMinzoom(Fields.BICYCLE, nullIfEmpty(element.bicycle()), 9)
