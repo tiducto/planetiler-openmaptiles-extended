@@ -4,9 +4,11 @@ import static com.onthegomap.planetiler.TestUtils.newLineString;
 import static com.onthegomap.planetiler.TestUtils.newPoint;
 import static com.onthegomap.planetiler.TestUtils.rectangle;
 import static java.util.Map.entry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.onthegomap.planetiler.FeatureCollector;
+import com.onthegomap.planetiler.VectorTile;
 import com.onthegomap.planetiler.config.Arguments;
 import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.geo.GeometryException;
@@ -16,6 +18,7 @@ import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmRelationInfo;
 import com.onthegomap.planetiler.stats.Stats;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -166,30 +169,137 @@ class TransportationTest extends AbstractLayerTest {
 
   @Test
   void testPrivatePath() {
-    assertFeatures(9, List.of(Map.of(
+    var ends = List.<Map<String, Object>>of(
+      Map.of("_layer", "transportation", "_type", "point", "_minzoom", 14, "access", "no"),
+      Map.of("_layer", "transportation", "_type", "point", "_minzoom", 14, "access", "no")
+    );
+    var privatePath = new ArrayList<Map<String, Object>>(List.of(Map.of(
       "_layer", "transportation",
       "class", "path",
       "access", "no"
-    )), process(lineFeature(Map.of(
+    )));
+    privatePath.addAll(ends);
+    assertFeatures(9, privatePath, process(lineFeature(Map.of(
       "access", "private",
       "highway", "path"
     ))));
-    assertFeatures(9, List.of(Map.of(
-      "_layer", "transportation",
-      "class", "path",
-      "access", "no"
-    )), process(lineFeature(Map.of(
+    assertFeatures(9, privatePath, process(lineFeature(Map.of(
       "access", "no",
       "highway", "path"
     ))));
-    assertFeatures(8, List.of(Map.of(
+    var z8 = new ArrayList<Map<String, Object>>(List.of(Map.of(
       "_layer", "transportation",
       "class", "path",
       "access", "<null>"
-    )), process(lineFeature(Map.of(
+    )));
+    z8.addAll(ends);
+    assertFeatures(8, z8, process(lineFeature(Map.of(
       "access", "no",
       "highway", "path"
     ))));
+  }
+
+  private FeatureCollector processPath(Map<String, Object> tags, double... lonLats) {
+    return process(SimpleFeature.createFakeOsmFeature(newLineString(lonLats), tags, OpenMapTilesProfile.OSM_SOURCE,
+      null, 0, List.of()));
+  }
+
+  @Test
+  void testPathEndsClosedToWalkers() {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "_type", "line",
+      "class", "path",
+      "subclass", "steps",
+      "access", "no"
+    ), Map.of(
+      "_layer", "transportation",
+      "_type", "point",
+      "_minzoom", 14,
+      "class", "path",
+      "subclass", "steps",
+      "access", "no",
+      "foot", "<null>",
+      "bearing", 90
+    ), Map.of(
+      "_layer", "transportation",
+      "_type", "point",
+      "_minzoom", 14,
+      "class", "path",
+      "subclass", "steps",
+      "bearing", 270
+    )), processPath(Map.of(
+      "highway", "steps",
+      "access", "no"
+    ), 0, 0, 0.001, 0));
+    assertFeatures(14, List.of(Map.of(
+      "_type", "line",
+      "class", "path"
+    ), Map.of(
+      "_type", "point",
+      "subclass", "footway",
+      "access", "<null>",
+      "foot", "private",
+      "bearing", 0
+    ), Map.of(
+      "_type", "point",
+      "bearing", 180
+    )), processPath(Map.of(
+      "highway", "footway",
+      "foot", "private"
+    ), 0, 0, 0, 0.001));
+  }
+
+  @Test
+  void testNoPathEndsOpenToWalkers() {
+    assertFeatures(14, List.of(Map.of(
+      "_type", "line",
+      "class", "path",
+      "access", "no",
+      "foot", "yes"
+    )), processPath(Map.of(
+      "highway", "footway",
+      "access", "private",
+      "foot", "yes"
+    ), 0, 0, 0.001, 0));
+    assertFeatures(14, List.of(Map.of(
+      "_type", "line",
+      "class", "service"
+    )), processPath(Map.of(
+      "highway", "service",
+      "access", "no"
+    ), 0, 0, 0.001, 0));
+    assertFeatures(14, List.of(Map.of(
+      "_type", "line",
+      "class", "path"
+    )), processPath(Map.of(
+      "highway", "footway",
+      "access", "no"
+    ), 0, 0, 0.001, 0, 0.001, 0.001, 0, 0));
+  }
+
+  @Test
+  void testDropsPathEndsSharedByClosedPaths() throws GeometryException {
+    Map<String, Object> closed = Map.of("class", "path", "subclass", "footway", "access", "no");
+    var first = new VectorTile.Feature("transportation", 1, VectorTile.encodeGeometry(newLineString(0, 0, 10, 0)),
+      new HashMap<>(closed), 0);
+    var second = new VectorTile.Feature("transportation", 2, VectorTile.encodeGeometry(newLineString(10, 0, 20, 0)),
+      new HashMap<>(closed), 0);
+    List<VectorTile.Feature> ends = new ArrayList<>();
+    double[][] points = {{0, 0, 90}, {10, 0, 270}, {10, 0, 90}, {20, 0, 270}};
+    for (double[] point : points) {
+      Map<String, Object> attrs = new HashMap<>(closed);
+      attrs.put("bearing", (int) point[2]);
+      ends.add(
+        new VectorTile.Feature("transportation", 3, VectorTile.encodeGeometry(newPoint(point[0], point[1])), attrs, 0));
+    }
+    List<VectorTile.Feature> input = new ArrayList<>(List.of(first, second));
+    input.addAll(ends);
+
+    var result = profile.postProcessLayerFeatures("transportation", 14, input);
+
+    var kept = result.stream().filter(feature -> feature.tags().containsKey("bearing")).toList();
+    assertEquals(List.of(ends.get(0), ends.get(3)), kept);
   }
 
   @Test

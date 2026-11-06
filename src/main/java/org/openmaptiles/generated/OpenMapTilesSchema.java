@@ -859,7 +859,7 @@ public class OpenMapTilesSchema {
    * derived from the OSM road hierarchy. At lower zoom levels major highways from Natural Earth are used. It contains
    * all roads from motorways to primary, secondary and tertiary roads to residential roads and foot paths. Styling the
    * roads is the most essential part of the map. The <code>transportation</code> layer also contains polygons for
-   * features like plazas.
+   * features like plazas, and points at the ends of paths closed to pedestrians.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
@@ -1101,6 +1101,17 @@ public class OpenMapTilesSchema {
        * </ul>
        */
       public static final String SURFACE = "surface";
+      /**
+       * Set only on the points at the ends of <code>path</code> ways closed to pedestrians: ways whose
+       * <a href="http://wiki.openstreetmap.org/wiki/Key:foot"><code>foot</code></a> tag is <code>no</code> or
+       * <code>private</code>, or whose <a href="http://wiki.openstreetmap.org/wiki/Key:access"><code>access</code></a>
+       * tag is <code>no</code> or <code>private</code> unless <code>foot</code> is <code>yes</code>,
+       * <code>designated</code>, <code>permissive</code>, <code>customers</code> or <code>destination</code>. The
+       * direction from the point into the way, in whole degrees clockwise from north, so a style can draw a bar across
+       * the end. The points carry the way's <code>class</code>, <code>subclass</code>, <code>access</code> and
+       * <code>foot</code>. Closed rings get none, and an end shared with another such path is left out. Zoom 14 and up.
+       */
+      public static final String BEARING = "bearing";
     }
     /** Attribute values for map elements in the transportation layer. */
     final class FieldValues {

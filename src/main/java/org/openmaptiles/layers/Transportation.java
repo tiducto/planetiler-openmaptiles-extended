@@ -49,6 +49,7 @@ import com.onthegomap.planetiler.config.PlanetilerConfig;
 import com.onthegomap.planetiler.expression.MultiExpression;
 import com.onthegomap.planetiler.geo.GeoUtils;
 import com.onthegomap.planetiler.geo.GeometryException;
+import com.onthegomap.planetiler.geo.GeometryType;
 import com.onthegomap.planetiler.reader.SourceFeature;
 import com.onthegomap.planetiler.reader.osm.OsmElement;
 import com.onthegomap.planetiler.reader.osm.OsmReader;
@@ -61,6 +62,8 @@ import com.onthegomap.planetiler.util.ZoomFunction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,6 +71,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
@@ -140,6 +144,10 @@ public class Transportation implements
   private static final Set<String> ACCESS_NO_VALUES = Set.of(
     "private", "no"
   );
+  private static final Set<String> FOOT_CLOSED_VALUES = Set.of("no", "private");
+  private static final Set<String> FOOT_OPEN_VALUES = Set.of("yes", "designated", "permissive", "customers",
+    "destination");
+  private static final int PATH_END_MINZOOM = 14;
   // ... and also Z4_MOTORWAY_NY_NETWORK, except those in Z5_MOTORWAYS_BY_NETWORK:
   private static final Set<RouteNetwork> Z5_TRUNK_BY_NETWORK = Set.of(
     RouteNetwork.CA_TRANSCANADA,
@@ -214,6 +222,13 @@ public class Transportation implements
   private static String surface(String value) {
     return value == null ? null : SURFACE_PAVED_VALUES.contains(value) ? FieldValues.SURFACE_PAVED :
       SURFACE_UNPAVED_VALUES.contains(value) ? FieldValues.SURFACE_UNPAVED : null;
+  }
+
+  static boolean closedToWalkers(String access, String foot) {
+    if (foot != null && FOOT_CLOSED_VALUES.contains(foot)) {
+      return true;
+    }
+    return access != null && ACCESS_NO_VALUES.contains(access) && (foot == null || !FOOT_OPEN_VALUES.contains(foot));
   }
 
   /** Returns a value for {@code access} tag constrained to a small set of known values from raw OSM data. */
@@ -544,7 +559,43 @@ public class Transportation implements
           .setAttr(Fields.LEVEL, Parse.parseLongOrNull(element.source().getTag("level")))
           .setAttr(Fields.INDOOR, element.indoor() ? 1 : null);
       }
+
+      if (FieldValues.CLASS_PATH.equals(highwayClass(highway, null, element.construction(), null)) &&
+        closedToWalkers(element.access(), element.foot())) {
+        addPathEnds(element, highway, features);
+      }
     }
+  }
+
+  private void addPathEnds(Tables.OsmHighwayLinestring element, String highway, FeatureCollector features) {
+    try {
+      if (!(element.source().line()instanceof LineString line) || line.isClosed()) {
+        return;
+      }
+      Coordinate[] coordinates = line.getCoordinates();
+      int last = coordinates.length - 1;
+      for (int end : new int[]{0, last}) {
+        int step = end == 0 ? 1 : -1;
+        int inner = end + step;
+        while (inner > 0 && inner < last && coordinates[inner].equals2D(coordinates[end])) {
+          inner += step;
+        }
+        features.geometry(LAYER_NAME, GeoUtils.point(coordinates[end])).setBufferPixels(BUFFER_SIZE)
+          .setAttr(Fields.CLASS, FieldValues.CLASS_PATH)
+          .setAttr(Fields.SUBCLASS, highway)
+          .setAttr(Fields.ACCESS, access(element.access()))
+          .setAttr(Fields.FOOT, nullIfEmpty(element.foot()))
+          .setAttr(Fields.BEARING, bearing(coordinates[end], coordinates[inner]))
+          .setMinZoom(PATH_END_MINZOOM);
+      }
+    } catch (GeometryException e) {
+      e.log(stats, "omt_transportation_path_end", "Unable to get path ends: " + element.source().id());
+    }
+  }
+
+  static int bearing(Coordinate from, Coordinate to) {
+    double degrees = Math.toDegrees(Math.atan2(to.x - from.x, from.y - to.y));
+    return Math.floorMod((int) Math.round(degrees), 360);
   }
 
   private static final double TRUNK_Z0_UPGRADE_LENGTH = GeoUtils.metersToPixelAtEquator(0, 500);
@@ -727,12 +778,50 @@ public class Transportation implements
       }
     }
 
-    var merged = FeatureMerge.mergeLineStrings(items, minLength, tolerance, BUFFER_SIZE);
+    var merged = FeatureMerge.mergeLineStrings(withoutSharedPathEnds(items), minLength, tolerance, BUFFER_SIZE);
 
     for (var item : merged) {
       item.tags().remove(LIMIT_MERGE_TAG);
     }
     return merged;
+  }
+
+  private static List<VectorTile.Feature> withoutSharedPathEnds(List<VectorTile.Feature> items) {
+    if (items.stream().noneMatch(item -> item.tags().containsKey(Fields.BEARING))) {
+      return items;
+    }
+    Map<Coordinate, Integer> closedPaths = new HashMap<>();
+    for (var item : items) {
+      if (item.geometry().geomType() == GeometryType.LINE &&
+        FieldValues.CLASS_PATH.equals(item.tags().get(Fields.CLASS)) &&
+        closedToWalkers(stringOrNull(item.tags().get(Fields.ACCESS)), stringOrNull(item.tags().get(Fields.FOOT)))) {
+        try {
+          for (var coordinate : new HashSet<>(List.of(item.geometry().decode().getCoordinates()))) {
+            closedPaths.merge(coordinate, 1, Integer::sum);
+          }
+        } catch (GeometryException e) {
+          return items;
+        }
+      }
+    }
+    List<VectorTile.Feature> result = new ArrayList<>(items.size());
+    for (var item : items) {
+      if (item.tags().containsKey(Fields.BEARING)) {
+        try {
+          if (closedPaths.getOrDefault(item.geometry().decode().getCoordinate(), 0) > 1) {
+            continue;
+          }
+        } catch (GeometryException e) {
+          return items;
+        }
+      }
+      result.add(item);
+    }
+    return result;
+  }
+
+  private static String stringOrNull(Object value) {
+    return value instanceof String string ? string : null;
   }
 
   enum RouteNetwork {
