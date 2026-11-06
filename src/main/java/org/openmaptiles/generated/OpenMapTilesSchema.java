@@ -859,7 +859,10 @@ public class OpenMapTilesSchema {
    * derived from the OSM road hierarchy. At lower zoom levels major highways from Natural Earth are used. It contains
    * all roads from motorways to primary, secondary and tertiary roads to residential roads and foot paths. Styling the
    * roads is the most essential part of the map. The <code>transportation</code> layer also contains polygons for
-   * features like plazas.
+   * features like plazas. Besides <code>highway</code> areas tagged <code>area=yes</code>, the walkable surfaces of
+   * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (<code>footway</code>,
+   * <code>pedestrian</code>, <code>path</code>, <code>cycleway</code>, <code>bridleway</code>, <code>corridor</code>
+   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
@@ -917,7 +920,9 @@ public class OpenMapTilesSchema {
       /**
        * Distinguish more specific classes of railway and path: Subclass is value of the
        * <a href="http://wiki.openstreetmap.org/wiki/Key:railway"><code>railway</code></a>,
-       * <a href="http://wiki.openstreetmap.org/wiki/Key:highway"><code>highway</code></a> (for paths), or
+       * <a href="http://wiki.openstreetmap.org/wiki/Key:highway"><code>highway</code></a> (for paths),
+       * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (for path polygons
+       * outlining a surface), or
        * <a href="http://wiki.openstreetmap.org/wiki/Key:public_transport"><code>public_transport</code></a> (for
        * platforms) tag.
        * <p>
