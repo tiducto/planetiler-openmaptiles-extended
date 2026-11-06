@@ -9,15 +9,16 @@ Each addition lives on its own branch, based on upstream `main`, with its tests,
 its own. The schema side of each lives in [tiducto/openmaptiles-extended](https://github.com/tiducto/openmaptiles-extended)
 on a branch of the same name, also based on upstream.
 
-|        Branch        |                                                                   Change                                                                   |
-|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `motorroad`          | `motorroad=1` on non-motorway roads tagged `motorroad=yes` ([openmaptiles#1818](https://github.com/openmaptiles/openmaptiles/pull/1818))   |
-| `elevator`           | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
-| `footpath-over-area` | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
-| `building-roof`      | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
-| `path-covered`       | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
-| `area-highway`       | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
-| `water-name-maxzoom` | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
+|         Branch         |                                                                   Change                                                                   |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `motorroad`            | `motorroad=1` on non-motorway roads tagged `motorroad=yes` ([openmaptiles#1818](https://github.com/openmaptiles/openmaptiles/pull/1818))   |
+| `elevator`             | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
+| `footpath-over-area`   | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
+| `building-roof`        | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
+| `path-covered`         | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
+| `area-highway`         | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
+| `restricted-path-ends` | points at the ends of `path` ways closed to pedestrians, with `bearing` into the way (shared ends left out)                                |
+| `water-name-maxzoom`   | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
 matching `openmaptiles-extended` branch, add the Java change and tests, then merge it into `main`. When two branches
