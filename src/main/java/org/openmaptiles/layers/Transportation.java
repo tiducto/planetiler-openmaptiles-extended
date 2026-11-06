@@ -695,15 +695,17 @@ public class Transportation implements
   @Override
   public void process(Tables.OsmHighwayPolygon element, FeatureCollector features) {
     String manMade = element.manMade();
+    boolean surface = "area:highway".equals(element.mappingKey());
+    String highway = surface ? element.areaHighway() : element.highway();
     if (isBridgeOrPier(manMade) ||
-      // only allow closed ways where area=yes, and multipolygons
+      // only allow closed ways where area=yes or area:highway, and multipolygons
       // and ignore underground pedestrian areas
-      (!element.source().canBeLine() && element.layer() >= 0)) {
-      String highwayClass = highwayClass(element.highway(), element.publicTransport(), null, element.manMade());
+      ((surface || !element.source().canBeLine()) && element.layer() >= 0)) {
+      String highwayClass = highwayClass(highway, element.publicTransport(), null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
           .setAttr(Fields.CLASS, highwayClass)
-          .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, element.publicTransport(), element.highway()))
+          .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, element.publicTransport(), highway))
           .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), false, false))
           .setAttr(Fields.LAYER, nullIfLong(element.layer(), 0))
           .setSortKey(element.zOrder())

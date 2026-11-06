@@ -2059,6 +2059,49 @@ class TransportationTest extends AbstractLayerTest {
       ))));
   }
 
+  @Test
+  void testAreaHighway() {
+    Map<String, Object> footwayArea = Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "footway",
+
+      "_minzoom", 13,
+      "_maxzoom", 14,
+      "_type", "polygon"
+    );
+    assertFeatures(14, List.of(footwayArea), process(closedWayFeature(Map.of(
+      "area:highway", "footway",
+      "surface", "sett"
+    ))));
+    assertFeatures(14, List.of(footwayArea), process(polygonFeature(Map.of(
+      "area:highway", "footway"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "pedestrian",
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "area:highway", "pedestrian"
+    ))));
+    assertFeatures(14, List.of(footwayArea), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "area", "yes",
+      "area:highway", "pedestrian"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "area:highway", "primary"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "area:highway", "traffic_island"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "area:highway", "footway",
+      "layer", "-1"
+    ))));
+  }
+
   private int getWaySortKey(Map<String, Object> tags) {
     var iter = process(lineFeature(tags)).iterator();
     return iter.next().getSortKey();
