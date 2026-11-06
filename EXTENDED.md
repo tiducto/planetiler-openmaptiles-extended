@@ -15,6 +15,8 @@ on a branch of the same name, also based on upstream.
 | `elevator`           | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
 | `footpath-over-area` | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
 | `building-roof`      | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
+| `path-covered`       | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
+| `area-highway`       | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
 | `water-name-maxzoom` | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
