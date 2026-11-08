@@ -69,6 +69,60 @@ class PoiTest extends AbstractLayerTest {
     ))));
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testPrivateToilets(boolean area) {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "poi",
+      "class", "toilets",
+      "subclass", "toilets",
+      "access", "private"
+    )), process(feature(area, Map.of(
+      "amenity", "toilets",
+      "access", "private"
+    ))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testCustomersParking(boolean area) {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "poi",
+      "class", "parking",
+      "subclass", "parking",
+      "access", "customers"
+    )), process(feature(area, Map.of(
+      "amenity", "parking",
+      "access", "customers"
+    ))));
+  }
+
+  @Test
+  void testNoAccessParkingArea() {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "poi",
+      "class", "parking",
+      "subclass", "parking",
+      "access", "no"
+    )), process(polygonFeature(Map.of(
+      "amenity", "parking",
+      "access", "no"
+    ))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"yes", "permissive", "destination", ""})
+  void testOtherAccessLeftOut(String access) {
+    assertFeatures(14, List.of(Map.of(
+      "_layer", "poi",
+      "subclass", "toilets",
+      "access", "<null>"
+    )), process(pointFeature(Map.of(
+      "amenity", "toilets",
+      "access", access
+    ))));
+  }
+
   private List<FeatureCollector.Feature> testAggStops(List<SourceFeature> sourceFeatures) {
     sourceFeatures.forEach(this::process);
 

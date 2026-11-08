@@ -722,17 +722,17 @@ public class Tables {
     @Override String subclass, @Override String mappingKey, @Override String station, @Override String funicular,
     @Override String information, @Override String uicRef, @Override String ref, @Override String religion,
     @Override long level, @Override boolean indoor, @Override long layer, @Override String sport,
-    @Override String operator, @Override String network, @Override String brand, @Override SourceFeature source)
-    implements Row, WithName, WithNameEn, WithNameDe, WithSubclass, WithMappingKey, WithStation, WithFunicular,
-    WithInformation, WithUicRef, WithRef, WithReligion, WithLevel, WithIndoor, WithLayer, WithSport, WithOperator,
-    WithNetwork, WithBrand, WithSource {
+    @Override String operator, @Override String network, @Override String brand, @Override String access,
+    @Override SourceFeature source) implements Row, WithName, WithNameEn, WithNameDe, WithSubclass, WithMappingKey,
+    WithStation, WithFunicular, WithInformation, WithUicRef, WithRef, WithReligion, WithLevel, WithIndoor, WithLayer,
+    WithSport, WithOperator, WithNetwork, WithBrand, WithAccess, WithSource {
     public OsmPoiPoint(SourceFeature source, String mappingKey) {
       this(source.getString("name"), source.getString("name:en"), source.getString("name:de"),
         source.getString(mappingKey), mappingKey, source.getString("station"), source.getString("funicular"),
         source.getString("information"), source.getString("uic_ref"), source.getString("ref"),
         source.getString("religion"), source.getLong("level"), source.getBoolean("indoor"), source.getLong("layer"),
         source.getString("sport"), source.getString("operator"), source.getString("network"), source.getString("brand"),
-        source);
+        source.getString("access"), source);
     }
 
     /** Imposm3 "mapping" to filter OSM elements that should appear in this "table". */
@@ -803,17 +803,17 @@ public class Tables {
     @Override String subclass, @Override String mappingKey, @Override String station, @Override String funicular,
     @Override String information, @Override String uicRef, @Override String ref, @Override String religion,
     @Override long level, @Override boolean indoor, @Override long layer, @Override String sport,
-    @Override String operator, @Override String network, @Override String brand, @Override SourceFeature source)
-    implements Row, WithName, WithNameEn, WithNameDe, WithSubclass, WithMappingKey, WithStation, WithFunicular,
-    WithInformation, WithUicRef, WithRef, WithReligion, WithLevel, WithIndoor, WithLayer, WithSport, WithOperator,
-    WithNetwork, WithBrand, WithSource {
+    @Override String operator, @Override String network, @Override String brand, @Override String access,
+    @Override SourceFeature source) implements Row, WithName, WithNameEn, WithNameDe, WithSubclass, WithMappingKey,
+    WithStation, WithFunicular, WithInformation, WithUicRef, WithRef, WithReligion, WithLevel, WithIndoor, WithLayer,
+    WithSport, WithOperator, WithNetwork, WithBrand, WithAccess, WithSource {
     public OsmPoiPolygon(SourceFeature source, String mappingKey) {
       this(source.getString("name"), source.getString("name:en"), source.getString("name:de"),
         source.getString(mappingKey), mappingKey, source.getString("station"), source.getString("funicular"),
         source.getString("information"), source.getString("uic_ref"), source.getString("ref"),
         source.getString("religion"), source.getLong("level"), source.getBoolean("indoor"), source.getLong("layer"),
         source.getString("sport"), source.getString("operator"), source.getString("network"), source.getString("brand"),
-        source);
+        source.getString("access"), source);
     }
 
     /** Imposm3 "mapping" to filter OSM elements that should appear in this "table". */
