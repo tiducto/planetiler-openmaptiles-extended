@@ -18,6 +18,7 @@ on a branch of the same name, also based on upstream.
 | `path-covered`         | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
 | `area-highway`         | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
 | `restricted-path-ends` | points at the ends of `path` ways closed to pedestrians, with `bearing` into the way (shared ends left out)                                |
+| `poi-access`           | `access` on POIs tagged `access` `private`, `no` or `customers`, left out for other values                                                 |
 | `water-name-maxzoom`   | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
