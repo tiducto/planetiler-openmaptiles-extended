@@ -222,7 +222,7 @@ public class Boundary implements
       relation.hasTag("boundary", "administrative")) {
       Integer adminLevelValue = Parse.parseRoundInt(relation.getTag("admin_level"));
       String code = relation.getString("ISO3166-1:alpha3");
-      if (adminLevelValue != null && adminLevelValue >= 2 && adminLevelValue <= 10) {
+      if (adminLevelValue != null && adminLevelValue >= 2 && adminLevelValue <= 6) {
         boolean disputed = isDisputed(relation.tags());
         if (code != null) {
           regionNames.put(relation.id(), code);
@@ -268,7 +268,7 @@ public class Boundary implements
         }
       }
 
-      if (minAdminLevel <= 10) {
+      if (minAdminLevel <= 6) {
         boolean wayIsDisputed = isDisputed(feature.tags());
         disputed |= wayIsDisputed;
         if (wayIsDisputed) {
@@ -280,9 +280,7 @@ public class Boundary implements
           feature.hasTag("boundary_type", "maritime");
         int minzoom =
           (maritime && minAdminLevel == 2) ? 4 :
-            minAdminLevel <= 4 ? 5 :
-            minAdminLevel <= 6 ? 9 :
-            minAdminLevel <= 8 ? 11 : 12;
+            minAdminLevel <= 4 ? 5 : 9;
         if (onlyOsmBoundaries && minAdminLevel <= 4) {
           minzoom = minAdminLevel == 2 ? (maritime ? 4 : 0) : 1;
         }

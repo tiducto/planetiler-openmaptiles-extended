@@ -716,9 +716,9 @@ public class OpenMapTilesSchema {
       public static final String NAME = "name";
       /**
        * OSM <a href="http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative#admin_level">admin_level</a>
-       * indicating the level of importance of this boundary. The <code>admin_level</code> corresponds to the lowest
-       * <code>admin_level</code> the line participates in. At low zoom levels the Natural Earth boundaries are mapped
-       * to the equivalent admin levels.
+       * indicating the level of importance of this boundary. Only boundaries with <code>admin_level</code> 2 to 6 are
+       * included. The <code>admin_level</code> corresponds to the lowest <code>admin_level</code> the line participates
+       * in. At low zoom levels the Natural Earth boundaries are mapped to the equivalent admin levels.
        */
       public static final String ADMIN_LEVEL = "admin_level";
       /** State name on the left of the border. For country boundaries only (<code>admin_level = 2</code>). */
