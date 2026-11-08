@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openmaptiles.OpenMapTilesProfile;
 
 class BoundaryTest extends AbstractLayerTest {
@@ -249,10 +251,10 @@ class BoundaryTest extends AbstractLayerTest {
   }
 
   @Test
-  void testOsmTownBoundary() {
+  void testOsmDistrictBoundary() {
     var relation = new OsmElement.Relation(1);
     relation.setTag("type", "boundary");
-    relation.setTag("admin_level", "10");
+    relation.setTag("admin_level", "6");
     relation.setTag("boundary", "administrative");
 
     assertFeatures(14, List.of(Map.of(
@@ -260,9 +262,9 @@ class BoundaryTest extends AbstractLayerTest {
       "_type", "line",
       "disputed", 0,
       "maritime", 0,
-      "admin_level", 10,
+      "admin_level", 6,
 
-      "_minzoom", 12,
+      "_minzoom", 9,
       "_maxzoom", 14,
       "_buffer", 4d,
       "_minpixelsize", 0d
@@ -298,8 +300,8 @@ class BoundaryTest extends AbstractLayerTest {
   void testOsmBoundaryTakesMinAdminLevel() {
     var relation1 = new OsmElement.Relation(1);
     relation1.setTag("type", "boundary");
-    relation1.setTag("admin_level", "10");
-    relation1.setTag("name", "Town");
+    relation1.setTag("admin_level", "6");
+    relation1.setTag("name", "District");
     relation1.setTag("boundary", "administrative");
     var relation2 = new OsmElement.Relation(2);
     relation2.setTag("type", "boundary");
@@ -325,7 +327,7 @@ class BoundaryTest extends AbstractLayerTest {
   void testOsmBoundarySetsMaritimeFromWay() {
     var relation1 = new OsmElement.Relation(1);
     relation1.setTag("type", "boundary");
-    relation1.setTag("admin_level", "10");
+    relation1.setTag("admin_level", "6");
     relation1.setTag("boundary", "administrative");
 
     assertFeatures(14, List.of(Map.of(
@@ -364,14 +366,18 @@ class BoundaryTest extends AbstractLayerTest {
     assertNull(profile.preprocessOsmRelation(relation1));
   }
 
-  @Test
-  void testIgnoresProtectedAdminLevelOver10() {
+  @ParameterizedTest
+  @ValueSource(strings = {"7", "8", "9", "10", "11", "6.5"})
+  void testIgnoresAdminLevelOver6(String adminLevel) {
     var relation1 = new OsmElement.Relation(1);
     relation1.setTag("type", "boundary");
-    relation1.setTag("admin_level", "11");
+    relation1.setTag("admin_level", adminLevel);
     relation1.setTag("boundary", "administrative");
 
     assertNull(profile.preprocessOsmRelation(relation1));
+    assertFeatures(14, List.of(), process(lineFeatureWithRelation(
+      profile.preprocessOsmRelation(relation1),
+      Map.of())));
   }
 
   @Test

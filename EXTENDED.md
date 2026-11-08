@@ -19,6 +19,7 @@ on a branch of the same name, also based on upstream.
 | `area-highway`         | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
 | `restricted-path-ends` | points at the ends of `path` ways closed to pedestrians, with `bearing` into the way (shared ends left out)                                |
 | `poi-access`           | `access` on POIs tagged `access` `private`, `no` or `customers`, left out for other values                                                 |
+| `boundary-levels`      | `boundary` lines only for `admin_level` 2 to 6; levels 7 to 10 (municipalities, city districts) are left out                               |
 | `water-name-maxzoom`   | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
