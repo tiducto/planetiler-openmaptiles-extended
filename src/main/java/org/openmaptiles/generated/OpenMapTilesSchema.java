@@ -1898,6 +1898,20 @@ public class OpenMapTilesSchema {
        * </ul>
        */
       public static final String INDOOR = "indoor";
+
+      /**
+       * The value of the OSM <a href="http://wiki.openstreetmap.org/wiki/Key:access"><code>access</code></a> tag when
+       * it is <code>private</code>, <code>no</code> or <code>customers</code>, so styles can hide POIs the public can't
+       * use or mark ones only for customers. Left out for any other value.
+       * <p>
+       * allowed values:
+       * <ul>
+       * <li>"private"
+       * <li>"no"
+       * <li>"customers"
+       * </ul>
+       */
+      public static final String ACCESS = "access";
     }
     /** Attribute values for map elements in the poi layer. */
     final class FieldValues {
@@ -1943,6 +1957,10 @@ public class OpenMapTilesSchema {
           "campsite", "laundry", "grocery", "library", "college", "lodging", "ice_cream", "post", "cafe", "school",
           "alcohol_shop", "bar", "harbor", "car", "hospital", "cemetery", "attraction", "beer", "music", "stadium",
           "art_gallery", "clothing_store", "swimming", "castle", "atm", "fuel", "zoo");
+      public static final String ACCESS_PRIVATE = "private";
+      public static final String ACCESS_NO = "no";
+      public static final String ACCESS_CUSTOMERS = "customers";
+      public static final Set<String> ACCESS_VALUES = Set.of("private", "no", "customers");
     }
     /** Complex mappings to generate attribute values from OSM element tags in the poi layer. */
     final class FieldMappings {
