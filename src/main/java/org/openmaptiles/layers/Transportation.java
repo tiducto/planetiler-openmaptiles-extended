@@ -332,6 +332,11 @@ public class Transportation implements
     return "bridge".equals(manMade) || "pier".equals(manMade);
   }
 
+  static String areaClass(String highwayClass, String manMade) {
+    return FieldValues.CLASS_PATH.equals(highwayClass) || isBridgeOrPier(manMade) ? highwayClass :
+      highwayClass + "_area";
+  }
+
   @Override
   public void processNaturalEarth(String table, SourceFeature feature,
     FeatureCollector features) {
@@ -764,7 +769,7 @@ public class Transportation implements
       String highwayClass = highwayClass(highway, element.publicTransport(), null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
-          .setAttr(Fields.CLASS, highwayClass)
+          .setAttr(Fields.CLASS, areaClass(highwayClass, manMade))
           .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, element.publicTransport(), highway))
           .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), false, false))
           .setAttr(Fields.LAYER, nullIfLong(element.layer(), 0))

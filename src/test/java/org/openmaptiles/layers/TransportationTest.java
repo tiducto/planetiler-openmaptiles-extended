@@ -2308,6 +2308,86 @@ class TransportationTest extends AbstractLayerTest {
   }
 
   @Test
+  void testRoadArea() {
+    Map<String, Object> serviceArea = Map.of(
+      "_layer", "transportation",
+      "class", "service_area",
+      "subclass", "<null>",
+
+      "_minzoom", 13,
+      "_maxzoom", 14,
+      "_type", "polygon"
+    );
+    assertFeatures(14, List.of(serviceArea), process(closedWayFeature(Map.of(
+      "highway", "service",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(serviceArea), process(polygonFeature(Map.of(
+      "highway", "service"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "minor_area",
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "residential",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "minor_area",
+      "_type", "polygon"
+    )), process(polygonFeature(Map.of(
+      "highway", "living_street"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "track_area",
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "track",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "service",
+      "_type", "line"
+    )), process(closedWayFeature(Map.of(
+      "highway", "service"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "service",
+      "_type", "line"
+    )), process(closedWayFeature(Map.of(
+      "highway", "service",
+      "area", "no"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "highway", "service",
+      "area", "yes",
+      "layer", "-1"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "highway", "raceway",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "service",
+      "_type", "line"
+    ), Map.of(
+      "class", "service",
+      "brunnel", "bridge",
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "service",
+      "man_made", "bridge"
+    ))));
+  }
+
+  @Test
+  void testPathNotOverRoadArea() throws GeometryException {
+    var roadArea = transportationFeature(rectangle(10, 20), Map.of("class", "service_area"));
+    assertEquals(Map.of("none", 30d),
+      pathLengthsByOver(14, roadArea, transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY)));
+  }
+
+  @Test
   void testPedestrianArea() {
     Map<String, Object> pedestrianArea = Map.of(
       "_layer", "transportation",

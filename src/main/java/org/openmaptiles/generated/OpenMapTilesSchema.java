@@ -863,7 +863,12 @@ public class OpenMapTilesSchema {
    * tagged <code>area=yes</code>, the walkable surfaces of
    * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (<code>footway</code>,
    * <code>pedestrian</code>, <code>path</code>, <code>cycleway</code>, <code>bridleway</code>, <code>corridor</code>
-   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>.
+   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>. Road areas,
+   * closed ways of a road <code>highway</code> (<code>service</code>, <code>residential</code>, <code>track</code>,
+   * ...) tagged <code>area=yes</code> and multipolygons with such a <code>highway</code>, become polygons whose
+   * <code>class</code> is the road's class followed by <code>_area</code> (<code>service_area</code>,
+   * <code>minor_area</code>, <code>track_area</code>, ...), so styles that draw the road classes with line layers don't
+   * stroke their outlines. Paths are not split by them and get no <code>over</code>.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
@@ -887,7 +892,9 @@ public class OpenMapTilesSchema {
        * <a href="http://wiki.openstreetmap.org/wiki/Key:aerialway"><code>aerialway</code></a>,
        * <a href="http://wiki.openstreetmap.org/wiki/Key:route"><code>route</code></a> tag (for shipping ways),
        * <a href="https://wiki.openstreetmap.org/wiki/Key:busway"><code>busway</code></a>, or
-       * <a href="http://wiki.openstreetmap.org/wiki/Key:man_made"><code>man_made</code></a>.
+       * <a href="http://wiki.openstreetmap.org/wiki/Key:man_made"><code>man_made</code></a>. Road area polygons take
+       * their road's class followed by <code>_area</code>, for example <code>service_area</code>,
+       * <code>minor_area</code> or <code>track_area</code>.
        * <p>
        * allowed values:
        * <ul>
