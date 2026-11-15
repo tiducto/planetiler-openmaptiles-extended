@@ -2308,6 +2308,73 @@ class TransportationTest extends AbstractLayerTest {
   }
 
   @Test
+  void testPlatformArea() {
+    Map<String, Object> platformArea = Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "platform",
+
+      "_minzoom", 13,
+      "_maxzoom", 14,
+      "_type", "polygon"
+    );
+    Map<String, Object> platformLine = Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "platform",
+      "_type", "line"
+    );
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "railway", "platform"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "public_transport", "platform",
+      "railway", "platform"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "public_transport", "platform",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "railway", "platform",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(polygonFeature(Map.of(
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(polygonFeature(Map.of(
+      "railway", "platform"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+      "public_transport", "platform",
+      "area", "no"
+    ))));
+    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+      "railway", "platform",
+      "area", "no"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(lineFeature(Map.of(
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+      "public_transport", "platform",
+      "layer", "-1"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+      "highway", "platform",
+      "public_transport", "platform",
+      "railway", "platform"
+    ))));
+  }
+
+  @Test
   void testPedestrianArea() {
     Map<String, Object> pedestrianArea = Map.of(
       "_layer", "transportation",

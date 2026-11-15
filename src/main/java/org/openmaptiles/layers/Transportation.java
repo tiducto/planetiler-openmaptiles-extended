@@ -332,6 +332,16 @@ public class Transportation implements
     return "bridge".equals(manMade) || "pier".equals(manMade);
   }
 
+  private static boolean isPlatform(String publicTransport, String railway) {
+    return "platform".equals(publicTransport) || "platform".equals(railway);
+  }
+
+  private static boolean isImpliedPlatformArea(SourceFeature source, String highway, String publicTransport,
+    String railway, long layer) {
+    return nullOrEmpty(highway) && isPlatform(publicTransport, railway) && layer >= 0 && source.canBePolygon() &&
+      !"no".equals(source.getString("area"));
+  }
+
   @Override
   public void processNaturalEarth(String table, SourceFeature feature,
     FeatureCollector features) {
@@ -499,7 +509,8 @@ public class Transportation implements
 
   @Override
   public void process(Tables.OsmHighwayLinestring element, FeatureCollector features) {
-    if (element.isArea()) {
+    if (element.isArea() || isImpliedPlatformArea(element.source(), element.highway(), element.publicTransport(),
+      element.source().getString("railway"), element.layer())) {
       return;
     }
 
@@ -757,15 +768,20 @@ public class Transportation implements
     String manMade = element.manMade();
     boolean surface = "area:highway".equals(element.mappingKey());
     String highway = surface ? element.areaHighway() : element.highway();
+    String publicTransport = nullOrEmpty(highway) && isPlatform(element.publicTransport(), element.railway()) ?
+      "platform" : element.publicTransport();
     if (isBridgeOrPier(manMade) ||
       // only allow closed ways where area=yes or area:highway, and multipolygons
       // and ignore underground pedestrian areas
-      ((surface || !element.source().canBeLine()) && element.layer() >= 0)) {
-      String highwayClass = highwayClass(highway, element.publicTransport(), null, element.manMade());
+      ((surface || !element.source().canBeLine() ||
+        isImpliedPlatformArea(element.source(), highway, element.publicTransport(), element.railway(),
+          element.layer())) &&
+        element.layer() >= 0)) {
+      String highwayClass = highwayClass(highway, publicTransport, null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
           .setAttr(Fields.CLASS, highwayClass)
-          .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, element.publicTransport(), highway))
+          .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, publicTransport, highway))
           .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), false, false))
           .setAttr(Fields.LAYER, nullIfLong(element.layer(), 0))
           .setSortKey(element.zOrder())

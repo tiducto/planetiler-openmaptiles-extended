@@ -863,7 +863,11 @@ public class OpenMapTilesSchema {
    * tagged <code>area=yes</code>, the walkable surfaces of
    * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (<code>footway</code>,
    * <code>pedestrian</code>, <code>path</code>, <code>cycleway</code>, <code>bridleway</code>, <code>corridor</code>
-   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>.
+   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>. A closed way
+   * tagged <code>public_transport=platform</code> or <code>railway=platform</code> without a <code>highway</code> tag,
+   * at <code>layer</code> 0 or above, is a <code>path</code> polygon with <code>subclass</code> <code>platform</code>
+   * unless it has <code>area=no</code>, and is then not repeated as a line. A closed <code>highway</code> way that is
+   * also a platform stays a line unless it has <code>area=yes</code>.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
