@@ -863,7 +863,9 @@ public class OpenMapTilesSchema {
    * tagged <code>area=yes</code>, the walkable surfaces of
    * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (<code>footway</code>,
    * <code>pedestrian</code>, <code>path</code>, <code>cycleway</code>, <code>bridleway</code>, <code>corridor</code>
-   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>.
+   * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>. Walkable area
+   * polygons below the ground (a negative <code>layer</code>) are kept with <code>brunnel</code> <code>tunnel</code>
+   * and their <code>layer</code>; they don't split paths and give them no <code>over</code>.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
@@ -1079,9 +1081,9 @@ public class OpenMapTilesSchema {
        * Filled only on <code>path</code> lines from z13: the kind of area polygon of this layer that the line runs
        * across on the same <code>layer</code>, so styles can draw a path over a square or a platform differently from
        * one on open ground. Lines are split where they enter and leave an area, and a line running along an area's edge
-       * counts as running across it. Bridges, tunnels and indoor paths are left out. Where areas overlap,
-       * <code>platform</code> wins over <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which
-       * wins over any other kind.
+       * counts as running across it. Bridges, tunnels and indoor paths are left out, and so are areas below the ground
+       * (<code>brunnel</code> <code>tunnel</code>). Where areas overlap, <code>platform</code> wins over
+       * <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which wins over any other kind.
        * <p>
        * allowed values:
        * <ul>

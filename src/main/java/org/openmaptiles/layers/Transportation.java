@@ -759,14 +759,13 @@ public class Transportation implements
     String highway = surface ? element.areaHighway() : element.highway();
     if (isBridgeOrPier(manMade) ||
       // only allow closed ways where area=yes or area:highway, and multipolygons
-      // and ignore underground pedestrian areas
-      ((surface || !element.source().canBeLine()) && element.layer() >= 0)) {
+      surface || !element.source().canBeLine()) {
       String highwayClass = highwayClass(highway, element.publicTransport(), null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
           .setAttr(Fields.CLASS, highwayClass)
           .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, element.publicTransport(), highway))
-          .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), false, false))
+          .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), element.layer() < 0, false))
           .setAttr(Fields.LAYER, nullIfLong(element.layer(), 0))
           .setSortKey(element.zOrder())
           .setMinZoom(13);
