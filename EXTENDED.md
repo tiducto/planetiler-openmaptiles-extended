@@ -23,6 +23,7 @@ on a branch of the same name, also based on upstream.
 | `platform-areas-implied` | closed `public_transport=platform` or `railway=platform` ways without `highway` as `path` polygons, unless `area=no`                       |
 | `road-areas`             | road `highway` areas (`area=yes`, multipolygons) as polygons of class `<road class>_area` (`service_area`, ...)                            |
 | `underground-areas`      | walkable area polygons with a negative `layer` kept, with `brunnel` `tunnel`; they don't split paths or set `over`                         |
+| `platform-rings`         | closed `highway=platform`/`bus_stop`/`footway` platform rings (no `area=yes`) as `path` polygons too; the router still walks them as lines |
 | `water-name-maxzoom`     | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
