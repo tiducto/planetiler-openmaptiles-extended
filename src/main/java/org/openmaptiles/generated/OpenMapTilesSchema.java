@@ -864,15 +864,16 @@ public class OpenMapTilesSchema {
    * <a href="http://wiki.openstreetmap.org/wiki/Key:area:highway"><code>area:highway</code></a> (<code>footway</code>,
    * <code>pedestrian</code>, <code>path</code>, <code>cycleway</code>, <code>bridleway</code>, <code>corridor</code>
    * and <code>steps</code>) become <code>path</code> polygons with that value as <code>subclass</code>. A closed way
-   * tagged <code>public_transport=platform</code> or <code>railway=platform</code> without a <code>highway</code> tag,
-   * at <code>layer</code> 0 or above, is a <code>path</code> polygon with <code>subclass</code> <code>platform</code>
-   * unless it has <code>area=no</code>, and is then not repeated as a line. A closed <code>highway</code> way that is
-   * also a platform stays a line unless it has <code>area=yes</code>. Road areas, closed ways of a road
-   * <code>highway</code> (<code>service</code>, <code>residential</code>, <code>track</code>, ...) tagged
-   * <code>area=yes</code> and multipolygons with such a <code>highway</code>, become polygons whose <code>class</code>
-   * is the road's class followed by <code>_area</code> (<code>service_area</code>, <code>minor_area</code>,
-   * <code>track_area</code>, ...), so styles that draw the road classes with line layers don't stroke their outlines.
-   * Paths are not split by them and get no <code>over</code>.
+   * tagged <code>public_transport=platform</code> or <code>railway=platform</code> without a <code>highway</code> tag
+   * is a <code>path</code> polygon with <code>subclass</code> <code>platform</code> unless it has <code>area=no</code>,
+   * and is then not repeated as a line. A closed <code>highway</code> way that is also a platform stays a line unless
+   * it has <code>area=yes</code>. Road areas, closed ways of a road <code>highway</code> (<code>service</code>,
+   * <code>residential</code>, <code>track</code>, ...) tagged <code>area=yes</code> and multipolygons with such a
+   * <code>highway</code>, become polygons whose <code>class</code> is the road's class followed by <code>_area</code>
+   * (<code>service_area</code>, <code>minor_area</code>, <code>track_area</code>, ...), so styles that draw the road
+   * classes with line layers don't stroke their outlines. Paths are not split by them and get no <code>over</code>.
+   * Walkable area polygons below the ground (a negative <code>layer</code>) are kept with <code>brunnel</code>
+   * <code>tunnel</code> and their <code>layer</code>; they don't split paths and give them no <code>over</code>.
    *
    * Generated from <a href=
    * "https://github.com/openmaptiles/openmaptiles/blob/master/layers/transportation/transportation.yaml">transportation.yaml</a>
@@ -1090,9 +1091,9 @@ public class OpenMapTilesSchema {
        * Filled only on <code>path</code> lines from z13: the kind of area polygon of this layer that the line runs
        * across on the same <code>layer</code>, so styles can draw a path over a square or a platform differently from
        * one on open ground. Lines are split where they enter and leave an area, and a line running along an area's edge
-       * counts as running across it. Bridges, tunnels and indoor paths are left out. Where areas overlap,
-       * <code>platform</code> wins over <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which
-       * wins over any other kind.
+       * counts as running across it. Bridges, tunnels and indoor paths are left out, and so are areas below the ground
+       * (<code>brunnel</code> <code>tunnel</code>). Where areas overlap, <code>platform</code> wins over
+       * <code>pier</code>, and <code>pier</code> over <code>pedestrian</code>, which wins over any other kind.
        * <p>
        * allowed values:
        * <ul>

@@ -22,6 +22,7 @@ on a branch of the same name, also based on upstream.
 | `boundary-levels`        | `boundary` lines only for `admin_level` 2 to 6; levels 7 to 10 (municipalities, city districts) are left out                               |
 | `platform-areas-implied` | closed `public_transport=platform` or `railway=platform` ways without `highway` as `path` polygons, unless `area=no`                       |
 | `road-areas`             | road `highway` areas (`area=yes`, multipolygons) as polygons of class `<road class>_area` (`service_area`, ...)                            |
+| `underground-areas`      | walkable area polygons with a negative `layer` kept, with `brunnel` `tunnel`; they don't split paths or set `over`                         |
 | `water-name-maxzoom`     | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the

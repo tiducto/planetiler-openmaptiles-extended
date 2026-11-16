@@ -337,8 +337,8 @@ public class Transportation implements
   }
 
   private static boolean isImpliedPlatformArea(SourceFeature source, String highway, String publicTransport,
-    String railway, long layer) {
-    return nullOrEmpty(highway) && isPlatform(publicTransport, railway) && layer >= 0 && source.canBePolygon() &&
+    String railway) {
+    return nullOrEmpty(highway) && isPlatform(publicTransport, railway) && source.canBePolygon() &&
       !"no".equals(source.getString("area"));
   }
 
@@ -515,7 +515,7 @@ public class Transportation implements
   @Override
   public void process(Tables.OsmHighwayLinestring element, FeatureCollector features) {
     if (element.isArea() || isImpliedPlatformArea(element.source(), element.highway(), element.publicTransport(),
-      element.source().getString("railway"), element.layer())) {
+      element.source().getString("railway"))) {
       return;
     }
 
@@ -777,17 +777,14 @@ public class Transportation implements
       "platform" : element.publicTransport();
     if (isBridgeOrPier(manMade) ||
       // only allow closed ways where area=yes or area:highway, and multipolygons
-      // and ignore underground pedestrian areas
-      ((surface || !element.source().canBeLine() ||
-        isImpliedPlatformArea(element.source(), highway, element.publicTransport(), element.railway(),
-          element.layer())) &&
-        element.layer() >= 0)) {
+      surface || !element.source().canBeLine() ||
+      isImpliedPlatformArea(element.source(), highway, element.publicTransport(), element.railway())) {
       String highwayClass = highwayClass(highway, publicTransport, null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)
           .setAttr(Fields.CLASS, areaClass(highwayClass, manMade))
           .setAttr(Fields.SUBCLASS, highwaySubclass(highwayClass, publicTransport, highway))
-          .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), false, false))
+          .setAttr(Fields.BRUNNEL, brunnel("bridge".equals(manMade), element.layer() < 0, false))
           .setAttr(Fields.LAYER, nullIfLong(element.layer(), 0))
           .setSortKey(element.zOrder())
           .setMinZoom(13);

@@ -90,7 +90,8 @@ final class PathsOverAreas {
   }
 
   private static String areaKind(VectorTile.Feature item) {
-    if (item.geometry().geomType() != GeometryType.POLYGON) {
+    if (item.geometry().geomType() != GeometryType.POLYGON ||
+      FieldValues.BRUNNEL_TUNNEL.equals(item.tags().get(Fields.BRUNNEL))) {
       return null;
     }
     Object clazz = item.tags().get(Fields.CLASS);

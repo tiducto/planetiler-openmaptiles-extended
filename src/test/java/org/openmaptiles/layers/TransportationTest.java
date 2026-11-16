@@ -2359,7 +2359,13 @@ class TransportationTest extends AbstractLayerTest {
     assertFeatures(14, List.of(platformLine), process(lineFeature(Map.of(
       "public_transport", "platform"
     ))));
-    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "platform",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
       "public_transport", "platform",
       "layer", "-1"
     ))));
@@ -2425,7 +2431,12 @@ class TransportationTest extends AbstractLayerTest {
       "highway", "service",
       "area", "no"
     ))));
-    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+    assertFeatures(14, List.of(Map.of(
+      "class", "service_area",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
       "highway", "service",
       "area", "yes",
       "layer", "-1"
@@ -2492,14 +2503,87 @@ class TransportationTest extends AbstractLayerTest {
       "foot", "yes",
       "area", "no"
     ))));
-    // ignore underground pedestrian areas
-    assertFeatures(14, List.of(),
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "pedestrian",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )),
       process(polygonFeature(Map.of(
         "highway", "pedestrian",
         "area", "yes",
         "foot", "yes",
         "layer", "-1"
       ))));
+  }
+
+  @Test
+  void testUndergroundArea() {
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "footway",
+      "brunnel", "tunnel",
+      "layer", -1L,
+
+      "_minzoom", 13,
+      "_maxzoom", 14,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "area", "yes",
+      "layer", "-1"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "platform",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "public_transport", "platform",
+      "railway", "platform",
+      "area", "yes",
+      "layer", "-1"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "pedestrian",
+      "brunnel", "tunnel",
+      "layer", -2L,
+      "_type", "polygon"
+    )), process(polygonFeature(Map.of(
+      "highway", "pedestrian",
+      "layer", "-2"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "pedestrian",
+      "brunnel", "<null>",
+      "layer", "<null>",
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "pedestrian",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "footway",
+      "_type", "line"
+    )), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "layer", "-1"
+    ))));
+  }
+
+  @Test
+  void testPathNotOverUndergroundArea() throws GeometryException {
+    var plaza = transportationFeature(rectangle(10, 20),
+      Map.of("class", "path", "subclass", "pedestrian", "brunnel", "tunnel", "layer", -1L));
+    assertEquals(Map.of("none", 30d),
+      pathLengthsByOver(14, plaza, transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY)));
+    assertEquals(Map.of("none", 30d), pathLengthsByOver(14, plaza, transportationFeature(
+      newLineString(0, 15, 30, 15), Map.of("class", "path", "subclass", "footway", "layer", -1L))));
   }
 
   @Test
@@ -2539,7 +2623,13 @@ class TransportationTest extends AbstractLayerTest {
     assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
       "area:highway", "traffic_island"
     ))));
-    assertFeatures(14, List.of(), process(closedWayFeature(Map.of(
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "footway",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
       "area:highway", "footway",
       "layer", "-1"
     ))));
