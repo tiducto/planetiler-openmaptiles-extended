@@ -482,7 +482,10 @@ public class Tables {
 
     /** Imposm3 "mapping" to filter OSM elements that should appear in this "table". */
     public static final Expression MAPPING = and(
-      or(matchAny("highway", "path", "cycleway", "bridleway", "footway", "corridor", "pedestrian", "steps"),
+      or(
+        matchAny("highway", "path", "cycleway", "bridleway", "footway", "corridor", "pedestrian", "steps", "motorway",
+          "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary",
+          "tertiary_link", "unclassified", "residential", "living_street", "road", "service", "track", "busway"),
         matchAny("public_transport", "platform"), matchAny("man_made", "bridge", "pier"),
         matchAny("railway", "platform"),
         matchAny("area:highway", "path", "cycleway", "bridleway", "footway", "corridor", "pedestrian", "steps")),

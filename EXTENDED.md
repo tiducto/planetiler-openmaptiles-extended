@@ -9,19 +9,20 @@ Each addition lives on its own branch, based on upstream `main`, with its tests,
 its own. The schema side of each lives in [tiducto/openmaptiles-extended](https://github.com/tiducto/openmaptiles-extended)
 on a branch of the same name, also based on upstream.
 
-|         Branch         |                                                                   Change                                                                   |
-|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `motorroad`            | `motorroad=1` on non-motorway roads tagged `motorroad=yes` ([openmaptiles#1818](https://github.com/openmaptiles/openmaptiles/pull/1818))   |
-| `elevator`             | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
-| `footpath-over-area`   | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
-| `building-roof`        | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
-| `path-covered`         | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
-| `area-highway`         | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
-| `restricted-path-ends` | points at the ends of `path` ways closed to pedestrians, with `bearing` into the way (shared ends left out)                                |
-| `poi-access`           | `access` on POIs tagged `access` `private`, `no` or `customers`, left out for other values                                                 |
-| `boundary-levels`      | `boundary` lines only for `admin_level` 2 to 6; levels 7 to 10 (municipalities, city districts) are left out                               |
-| `platform-areas-implied` | closed `public_transport=platform` or `railway=platform` ways without `highway` as `path` polygons, unless `area=no`                     |
-| `water-name-maxzoom`   | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
+|          Branch          |                                                                   Change                                                                   |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `motorroad`              | `motorroad=1` on non-motorway roads tagged `motorroad=yes` ([openmaptiles#1818](https://github.com/openmaptiles/openmaptiles/pull/1818))   |
+| `elevator`               | `highway=elevator` nodes and areas as POIs, class `elevator` ([openmaptiles#1820](https://github.com/openmaptiles/openmaptiles/pull/1820)) |
+| `footpath-over-area`     | `over` on `path` lines: the kind of area polygon (platform, pier, pedestrian, ...) a piece runs across                                     |
+| `building-roof`          | `roof=1` on buildings tagged `building=roof` (platform canopies, shelters, fuel station roofs)                                             |
+| `path-covered`           | `covered=1` on `path` lines tagged `covered` (any value but `no`): footways under a roof, an arcade or a canopy                            |
+| `area-highway`           | `area:highway` surfaces (`footway`, `pedestrian`, `path`, ...) as `path` polygons, like `highway` areas tagged `area=yes`                  |
+| `restricted-path-ends`   | points at the ends of `path` ways closed to pedestrians, with `bearing` into the way (shared ends left out)                                |
+| `poi-access`             | `access` on POIs tagged `access` `private`, `no` or `customers`, left out for other values                                                 |
+| `boundary-levels`        | `boundary` lines only for `admin_level` 2 to 6; levels 7 to 10 (municipalities, city districts) are left out                               |
+| `platform-areas-implied` | closed `public_transport=platform` or `railway=platform` ways without `highway` as `path` polygons, unless `area=no`                       |
+| `road-areas`             | road `highway` areas (`area=yes`, multipolygons) as polygons of class `<road class>_area` (`service_area`, ...)                            |
+| `water-name-maxzoom`     | lake name points up to the build's max zoom instead of a fixed z14 (Planetiler only, no schema change)                                     |
 
 `main` merges these branches. To add a new one: branch from upstream `main`, regenerate the schema code from the
 matching `openmaptiles-extended` branch, add the Java change and tests, then merge it into `main`. When two branches
