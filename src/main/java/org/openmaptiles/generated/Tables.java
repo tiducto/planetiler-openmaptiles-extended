@@ -485,7 +485,8 @@ public class Tables {
       or(
         matchAny("highway", "path", "cycleway", "bridleway", "footway", "corridor", "pedestrian", "steps", "motorway",
           "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary",
-          "tertiary_link", "unclassified", "residential", "living_street", "road", "service", "track", "busway"),
+          "tertiary_link", "unclassified", "residential", "living_street", "road", "service", "track", "busway",
+          "platform"),
         matchAny("public_transport", "platform"), matchAny("man_made", "bridge", "pier"),
         matchAny("railway", "platform"),
         matchAny("area:highway", "path", "cycleway", "bridleway", "footway", "corridor", "pedestrian", "steps")),

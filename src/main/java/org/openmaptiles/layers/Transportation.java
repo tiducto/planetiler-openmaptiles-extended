@@ -332,13 +332,13 @@ public class Transportation implements
     return "bridge".equals(manMade) || "pier".equals(manMade);
   }
 
-  private static boolean isPlatform(String publicTransport, String railway) {
-    return "platform".equals(publicTransport) || "platform".equals(railway);
+  private static boolean isPlatform(String publicTransport, String railway, String highway) {
+    return "platform".equals(publicTransport) || "platform".equals(railway) || "platform".equals(highway);
   }
 
   private static boolean isImpliedPlatformArea(SourceFeature source, String highway, String publicTransport,
     String railway) {
-    return nullOrEmpty(highway) && isPlatform(publicTransport, railway) && source.canBePolygon() &&
+    return isPlatform(publicTransport, railway, highway) && source.canBePolygon() &&
       !"no".equals(source.getString("area"));
   }
 
@@ -773,12 +773,12 @@ public class Transportation implements
     String manMade = element.manMade();
     boolean surface = "area:highway".equals(element.mappingKey());
     String highway = surface ? element.areaHighway() : element.highway();
-    String publicTransport = nullOrEmpty(highway) && isPlatform(element.publicTransport(), element.railway()) ?
+    String publicTransport = isPlatform(element.publicTransport(), element.railway(), element.highway()) ?
       "platform" : element.publicTransport();
     if (isBridgeOrPier(manMade) ||
       // only allow closed ways where area=yes or area:highway, and multipolygons
       surface || !element.source().canBeLine() ||
-      isImpliedPlatformArea(element.source(), highway, element.publicTransport(), element.railway())) {
+      isImpliedPlatformArea(element.source(), element.highway(), element.publicTransport(), element.railway())) {
       String highwayClass = highwayClass(highway, publicTransport, null, element.manMade());
       if (highwayClass != null) {
         features.polygon(LAYER_NAME).setBufferPixels(BUFFER_SIZE)

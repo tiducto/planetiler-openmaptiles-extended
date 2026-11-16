@@ -2369,15 +2369,86 @@ class TransportationTest extends AbstractLayerTest {
       "public_transport", "platform",
       "layer", "-1"
     ))));
-    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
-      "highway", "footway",
+  }
+
+  @Test
+  void testPlatformRing() {
+    Map<String, Object> platformArea = Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "platform",
+
+      "_minzoom", 13,
+      "_maxzoom", 14,
+      "_type", "polygon"
+    );
+    Map<String, Object> platformLine = Map.of(
+      "_layer", "transportation",
+      "class", "path",
+      "subclass", "platform",
+      "_type", "line"
+    );
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "highway", "platform"
+    ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "highway", "platform",
       "public_transport", "platform"
     ))));
-    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
       "highway", "platform",
       "public_transport", "platform",
       "railway", "platform"
     ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(Map.of("_layer", "poi", "subclass", "bus_stop"), platformArea),
+      process(closedWayFeature(Map.of(
+        "highway", "bus_stop",
+        "public_transport", "platform"
+      ))));
+    assertFeatures(14, List.of(platformArea), process(closedWayFeature(Map.of(
+      "highway", "footway",
+      "railway", "platform",
+      "area", "yes"
+    ))));
+    assertFeatures(14, List.of(Map.of(
+      "class", "path",
+      "subclass", "platform",
+      "brunnel", "tunnel",
+      "layer", -1L,
+      "_type", "polygon"
+    )), process(closedWayFeature(Map.of(
+      "highway", "platform",
+      "public_transport", "platform",
+      "layer", "-1"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(closedWayFeature(Map.of(
+      "highway", "platform",
+      "public_transport", "platform",
+      "area", "no"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(lineFeature(Map.of(
+      "highway", "platform",
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(platformLine), process(lineFeature(Map.of(
+      "highway", "footway",
+      "public_transport", "platform"
+    ))));
+    assertFeatures(14, List.of(Map.of("_layer", "poi", "subclass", "bus_stop")), process(closedWayFeature(Map.of(
+      "highway", "bus_stop"
+    ))));
+  }
+
+  @Test
+  void testPathOverPlatformRing() throws GeometryException {
+    var ring = process(closedWayFeature(Map.of("highway", "platform", "public_transport", "platform")));
+    var platform = transportationFeature(rectangle(10, 20), ring.iterator().next().getAttrsAtZoom(14));
+    assertEquals(Map.of("platform", 10d, "none", 20d),
+      pathLengthsByOver(14, platform, transportationFeature(newLineString(0, 15, 30, 15), FOOTWAY)));
   }
 
   @Test
